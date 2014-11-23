@@ -1,7 +1,54 @@
 \documentclass[12pt, letterpaper, preprint]{aastex}
 
+\newcommand{\project}[1]{\textsl{#1}}
+\newcommand{\kepler}{\project{Kepler}}
+
+\newcommand{\frequency}{\nu}
+\newcommand{\largedelta}{\Delta\frequency}
+\newcommand{\smalldelta}{\delta\frequency}
+\newcommand{\windowmean}{\bar{\frequency}}
+\newcommand{\windowwidth}{W}
+
 \begin{document}
 
-The
+At the precision of projects like the NASA \kepler\ mission,
+the ``observables'' of asteroseismology are limited.
+In one sense, they consist of the frequencies, amplitudes, and widths (quality factors)
+of a small set of modes found by taking a periodogram of the stellar lightcurve.
+These mode properties are statistics of the data---found by taking a periodogram
+and either inspecting it or measuring it---but even then, for most applications of asteroseismology,
+it is just a few statistics \emph{of} those statistics that are used:
+The modes appear like a comb, with a dominant ``large'' frequency spacing $\largedelta$;
+within this there are also some shifted modes, shifted by a ``small'' frequency spacing $\smalldelta$;
+and the mode amplitudes are modulated by a window function with some central frequency $\windowmean$
+and some width $\windowwidth$.
+
+Over-simplifying even further, We care most about the large frequency spacing $\largedelta$.
+That is, in a typical project, we take hundreds of thousands of photometric points at huge signal-to-noise,
+take a periodogram on a grid of hundreds of thousands of frequencies,
+measure the positions and heights of modes,
+and from this measure \emph{one single real-valued quantity}, the large spacing $\largedelta$.
+That's horrifying!
+Incredibly effective, valuable, and high impact, but also horrifying.
+
+Here we ask the following question:
+If \emph{all} we care about is the large spacing $\largedelta$,
+can we obtain a measurement of this quantity \emph{without} also measuring the entire periodogram and all modes?
+That is, in general you don't want to waste information in the data measuring things you don't care about.
+Can we do the most information-preserving possible measurement of the spacing $\largedelta$
+directly on the photometric data without going through intermediate steps?
+And if we succeed, will this give us the ability to measure the spacing $\largedelta$
+with data that are noisier, worse sampled, and cheaper to obtain?
+That is, could we greatly reduce the cost and greatly increase the effectiveness of
+first-order asteroseismology?
+
+If we succeed, it will embolden us to ask more and more crazy questions.
+For example, can we imagine practical project that could measure the large spacing $\largedelta$
+for a billion stars?
+For another, can we imagine measuring the spacing $\largedelta$ using data where the
+integration time is longer than the typical periods corresponding to the typical frequencies or $\windowmean$?
+That is, when we are only trying to measure one single number per star,
+and nothing \emph{other} than that one number,
+there are a lot of things that might become possible that otherwise seem impossible.
 
 \end{document}

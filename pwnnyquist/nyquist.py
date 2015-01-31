@@ -83,7 +83,7 @@ class LightCurveFootprint:
     def project(self, f):
         ys = np.zeros(len(self.starts))
         for n, (d, u) in enumerate(zip(self.starts, self.stops)):
-            ys[n] = f.definite_integral(d, u)
+            ys[n] = f.definite_integral(d, u) / (u - d)
         return ys
 
 def make_fake_data():
@@ -95,15 +95,15 @@ def make_fake_data():
     np.random.seed(42)
     k0 = (2 * np.pi / 5.132342) * 60 * 24 # 5-min period -> frequency in days
     dk = 0.002 * k0
-    ks = k0 + dk * np.arange(-5., 5.1, 1.)
+    ks = k0 + dk * np.arange(-1., 1.1, 1.)
     abks = np.zeros((len(ks), 3))
-    abks[:, 0] = 0.1 * np.random.normal(size=len(ks))
-    abks[:, 1] = 0.1 * np.random.normal(size=len(ks))
+    abks[:, 0] = 1.e-4 * np.random.normal(size=len(ks))
+    abks[:, 1] = 1.e-4 * np.random.normal(size=len(ks))
     abks[:, 2] = ks
     fun = Function(1.0, abks)
     lcf = LightCurveFootprint()
     data = lcf.project(fun) # project sinusoids
-    ivar = 1.e20 + np.zeros(len(data)) # incredibly low noise
+    ivar = 1.e10 + np.zeros(len(data)) # incredibly low noise
     data += (1.0 / np.sqrt(ivar)) * np.random.normal(size=len(data)) # add noise
     return lcf, data, ivar, fun
 
@@ -125,13 +125,6 @@ def fit_one_sinusoid(k, lcf, data, ivar):
     a0, a, b = pars
     return a0, a, b, chi2
 
-def fit_sinusoids(ks, lcf, data, ivar):
-    def _fitty(k):
-        print k
-        a0, a, b, chi2 = fit_one_sinusoid(k, lcf, data, ivar)
-        return a * a + b * b
-    return np.array(pmap(_fitty, ks))
-
 if __name__ == "__main__":
     picklefn = "nyquist.pkl"
     try:
@@ -147,7 +140,7 @@ if __name__ == "__main__":
 
         # perform inferences in Fourier space
         dk = 2. / (4.1 * 365.25) # frequency resolution for testing
-        testks = np.arange(-100.5, 3001., 1.) * dk + (truth.abks[0])[2]
+        testks = np.arange(-200.5, 6001., 1.) * dk + (truth.abks[0])[2]
         strt = time.time()
         amp2s = spg.superpgram(lcf.starts, lcf.stops, data, ivar, testks)
         print "computed super-resolution periodogram:", time.time() - strt

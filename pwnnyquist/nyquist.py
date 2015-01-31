@@ -157,7 +157,7 @@ if __name__ == "__main__":
     plt.clf()
     plt.plot(lcf.x_centers, data, "k.", ms=0.75)
     plt.savefig("foo.png")
-    dk = 2.
+    dk = 0.5
     ks = np.arange(1500. + 0.5 * dk, 2000., dk)
     amp2s = fit_sinusoids(ks, lcf, data, ivar)
     plt.clf()

@@ -94,7 +94,7 @@ def make_fake_data():
     """
     np.random.seed(42)
     k0 = (2 * np.pi / 5.132342) * 60 * 24 # 5-min period -> frequency in days
-    dk = 0.02 * k0
+    dk = 0.002 * k0
     ks = k0 + dk * np.arange(-5., 5.1, 1.)
     abks = np.zeros((len(ks), 3))
     abks[:, 0] = 0.1 * np.random.normal(size=len(ks))
@@ -141,14 +141,16 @@ if __name__ == "__main__":
     except:
 
         # make fake data
+        strt = time.time()
         lcf, data, ivar, truth = make_fake_data()
+        print "built fake data:", time.time() - strt
 
         # perform inferences in Fourier space
-        dk = 1. / (4.1 * 365.25) # frequency resolution for testing
-        testks = np.arange(-5.5, 5., 1.) * dk + (truth.abks[0])[2]
+        dk = 2. / (4.1 * 365.25) # frequency resolution for testing
+        testks = np.arange(-100.5, 3001., 1.) * dk + (truth.abks[0])[2]
         strt = time.time()
         amp2s = spg.superpgram(lcf.starts, lcf.stops, data, ivar, testks)
-        print time.time() - strt
+        print "computed super-resolution periodogram:", time.time() - strt
 
         # save output
         output = open(picklefn, "wb")
@@ -165,7 +167,7 @@ if __name__ == "__main__":
     # plot fourier tests
     plt.clf()
     plt.step(testks, np.log10(amp2s), color="k", where="mid")
-    plt.plot(testks, np.log10(amp2s), "ko")
+    # plt.plot(testks, np.log10(amp2s), "ko")
     for a, b, k in truth.abks:
         plt.axvline(k, alpha=0.5)
     plt.xlabel("wave number [rad per day]")

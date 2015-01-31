@@ -113,7 +113,7 @@ def make_fake_data():
     """
     np.random.seed(42)
     k0 = (2 * np.pi / 5.132342) * 60 * 24 # 5-min period -> frequency in days
-    dk = 0.05 * k0
+    dk = 0.02 * k0
     ks = k0 + dk * np.arange(-5., 5.1, 1.)
     abks = np.zeros((len(ks), 3))
     abks[:, 0] = 0.1 * np.random.normal(size=len(ks))
@@ -124,7 +124,7 @@ def make_fake_data():
     data = lcf.project(fun) # project sinusoids
     ivar = 100000. + np.zeros(len(data))
     data += (1.0 / np.sqrt(ivar)) * np.random.normal(size=len(data)) # add noise
-    return lcf, data, ivar
+    return lcf, data, ivar, fun
 
 def fit_one_sinusoid(k, lcf, data, ivar):
     """
@@ -153,16 +153,15 @@ def fit_sinusoids(ks, lcf, data, ivar):
     return amp2s
 
 if __name__ == "__main__":
-    lcf, data, ivar = make_fake_data()
+    lcf, data, ivar, truth = make_fake_data()
     plt.clf()
     plt.plot(lcf.x_centers, data, "k.", ms=0.75)
     plt.savefig("foo.png")
-    k0 = (2 * np.pi / 5.14) * 60 * 24 # 5.5-min period -> frequency in days
-    k1 = (2 * np.pi / 5.12) * 60 * 24 # 5-min period -> frequency in days
-    dk = 0.02 * (k1 - k0)
-    ks = np.arange(k0 + 0.5 * dk, k1, dk)
+    dk = 2.
+    ks = np.arange(1500. + 0.5 * dk, 2000., dk)
     amp2s = fit_sinusoids(ks, lcf, data, ivar)
     plt.clf()
-    plt.plot(ks, amp2s, "k.")
-    plt.axvline((2 * np.pi / 5.132342) * 60 * 24)
+    plt.step(ks, amp2s, color="k")
+    for a, b, k in truth.abks:
+        plt.axvline(k, alpha=0.5)
     plt.savefig("bar.png")

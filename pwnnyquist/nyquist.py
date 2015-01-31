@@ -8,8 +8,10 @@ Copyright 2015 David W. Hogg (NYU).
 
 import os.path as path
 import numpy as np
+import superpgram as spg
 import pylab as plt
 import cPickle as pickle
+import time
 
 nthreads = 1
 if nthreads > 1:
@@ -144,7 +146,9 @@ if __name__ == "__main__":
         # perform inferences in Fourier space
         dk = 1. / (4.1 * 365.25) # frequency resolution for testing
         testks = np.arange(-5.5, 5., 1.) * dk + (truth.abks[0])[2]
-        amp2s = fit_sinusoids(testks, lcf, data, ivar)
+        strt = time.time()
+        amp2s = spg.superpgram(lcf.starts, lcf.stops, data, ivar, testks)
+        print time.time() - strt
 
         # save output
         output = open(picklefn, "wb")
@@ -160,7 +164,8 @@ if __name__ == "__main__":
 
     # plot fourier tests
     plt.clf()
-    plt.step(testks, np.log10(amp2s), color="k")
+    plt.step(testks, np.log10(amp2s), color="k", where="mid")
+    plt.plot(testks, np.log10(amp2s), "ko")
     for a, b, k in truth.abks:
         plt.axvline(k, alpha=0.5)
     plt.xlabel("wave number [rad per day]")

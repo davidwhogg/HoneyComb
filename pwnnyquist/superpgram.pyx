@@ -1,7 +1,6 @@
 """
 This file is part of the HoneyComb project.
 Copyright 2015 Foreman-Mackey and Hogg.
-
 """
 
 from __future__ import division
@@ -13,11 +12,13 @@ cimport numpy as np
 DTYPE = np.float64
 ctypedef np.float64_t DTYPE_t
 
+@cython.boundscheck(False)
 def superpgram(np.ndarray[DTYPE_t, ndim=1, mode="c"] starts,
                np.ndarray[DTYPE_t, ndim=1, mode="c"] stops,
 	       np.ndarray[DTYPE_t, ndim=1, mode="c"] data,
 	       np.ndarray[DTYPE_t, ndim=1, mode="c"] ivars,
 	       np.ndarray[DTYPE_t, ndim=1, mode="c"] wavenumbers):
+
     assert starts.shape[0] == stops.shape[0]
     assert starts.shape[0] == data.shape[0]
     assert data.shape[0] == ivars.shape[0]
@@ -26,8 +27,10 @@ def superpgram(np.ndarray[DTYPE_t, ndim=1, mode="c"] starts,
     cdef np.ndarray[DTYPE_t, ndim=1, mode="c"] pgram = np.empty(K, dtype=DTYPE)
     cdef np.ndarray[DTYPE_t, ndim=2, mode="c"] ATA = np.empty((3, 3), dtype=DTYPE)
     cdef np.ndarray[DTYPE_t, ndim=1, mode="c"] ATy = np.empty(3, dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1, mode="c"] pars
     cdef int n, k
     cdef double c, s, u, d, wn, y, ivar
+
     for k in range(K):
         ATA[:, :] = 0.
         ATy[:] = 0.
@@ -51,7 +54,10 @@ def superpgram(np.ndarray[DTYPE_t, ndim=1, mode="c"] starts,
             ATy[1] += s * y * ivar
             ATy[2] += y * ivar
 
-        ATA[1, 0] = ATA[0, 1]
+        ATA[1, 0] = ATA[0, 1] # symmetrize
         ATA[2, 0] = ATA[0, 2]
         ATA[2, 1] = ATA[1, 2]
-    return 0.
+
+        pars = np.linalg.solve(ATA, ATy)
+        pgram[k] = pars[0] * pars[0] + pars[1] * pars[1]
+    return pgram

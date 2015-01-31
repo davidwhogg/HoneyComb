@@ -1,10 +1,22 @@
 """
 This file is part of the HoneyComb project.
 Copyright 2015 David W. Hogg (NYU).
+
+## bugs:
+* `nthreads > 1` doesn't work
 """
 
+import os.path as path
 import numpy as np
 import pylab as plt
+import cPickle as pickle
+
+nthreads = 1
+if nthreads > 1:
+    from multiprocessing import Pool
+    pmap = Pool(nthreads).map
+else:
+    pmap = map
 
 class Function:
     """
@@ -122,7 +134,7 @@ def make_fake_data():
     fun = Function(1.0, abks)
     lcf = LightCurveFootprint()
     data = lcf.project(fun) # project sinusoids
-    ivar = 100000. + np.zeros(len(data))
+    ivar = 1.e20 + np.zeros(len(data)) # incredibly low noise
     data += (1.0 / np.sqrt(ivar)) * np.random.normal(size=len(data)) # add noise
     return lcf, data, ivar, fun
 
@@ -145,23 +157,46 @@ def fit_one_sinusoid(k, lcf, data, ivar):
     return a0, a, b, chi2
 
 def fit_sinusoids(ks, lcf, data, ivar):
-    amp2s = np.zeros_like(ks)
-    for ii,k in enumerate(ks):
+    def _fitty(k):
+        print k
         a0, a, b, chi2 = fit_one_sinusoid(k, lcf, data, ivar)
-        amp2s[ii] = a * a + b * b
-        print ii, k, amp2s[ii]
-    return amp2s
+        return a * a + b * b
+    return np.array(pmap(_fitty, ks))
 
 if __name__ == "__main__":
-    lcf, data, ivar, truth = make_fake_data()
+    picklefn = "nyquist.pkl"
+    try:
+        input = open(picklefn, "rb")
+        lcf, data, ivar, truth, testks, amp2s = pickle.load(input)
+        input.close()
+    except:
+
+        # make fake data
+        lcf, data, ivar, truth = make_fake_data()
+
+        # perform inferences in Fourier space
+        dk = 1. / (4.1 * 365.25) # frequency resolution for testing
+        testks = np.arange(-200.5, 101., 1.) * dk + (truth.abks[0])[2]
+        amp2s = fit_sinusoids(testks, lcf, data, ivar)
+
+        # save output
+        output = open(picklefn, "wb")
+        pickle.dump((lcf, data, ivar, truth, testks, amp2s), output)
+        output.close()
+
+    # plot data
     plt.clf()
     plt.plot(lcf.x_centers, data, "k.", ms=0.75)
+    plt.xlabel("time [day]")
+    plt.ylabel("intensity")
     plt.savefig("foo.png")
-    dk = 0.5
-    ks = np.arange(1500. + 0.5 * dk, 2000., dk)
-    amp2s = fit_sinusoids(ks, lcf, data, ivar)
+
+    # plot fourier tests
     plt.clf()
-    plt.step(ks, amp2s, color="k")
+    plt.step(testks, np.log10(amp2s), color="k")
     for a, b, k in truth.abks:
         plt.axvline(k, alpha=0.5)
+    plt.xlabel("wave number [rad per day]")
+    plt.ylabel("log10 squared amplitude of best-fit sinusoid")
+    plt.xlim(np.min(testks), np.max(testks))
     plt.savefig("bar.png")

@@ -56,34 +56,6 @@ class Function:
             I -= (a / k) * np.sin(k * d) - (b / k) * np.cos(k * d)
         return I
 
-class Projection:
-    """
-    # `Projection`
-
-    A local linear projection operator that is a linear combination of
-    M top-hat definite integrals.
-    """
-
-    def __init__(self, duws):
-        self.M = 0
-        self.duws = None
-        if duws is not None:
-            self.duws = np.atleast_2d(np.array(duws))
-            M, foo = self.duws.shape
-            assert foo == 3
-            self.M = M
-
-    def __str__(self):
-        return "Projection %d " % (self.M, ) + str(self.duws)
-
-    def project(self, f):
-        if self.M == 0:
-            return 0.
-        I = 0.
-        for d, u, w in self.duws:
-            I += w * f.definite_integral(d, u)
-        return I
-
 class LightCurveFootprint:
     """
     # `LightCurveFootprint`
@@ -98,23 +70,18 @@ class LightCurveFootprint:
         # make regular grid in days
         t_centers = np.arange(0.5 * delta_t, 4.1 * 365.25, delta_t) # 4.1 years
         t_exp = 0.95 * delta_t
-        ds = t_centers - 0.5 * t_exp
-        us = t_centers + 0.5 * t_exp
         # distort time grid onto Barycentric Time
-        ds = self._time_distort(ds)
-        us = self._time_distort(us)
-        self.x_centers = 0.5 * (ds + us)
-        self.Ps = []
-        for d, u in zip(us, ds):
-            self.Ps.append(Projection([[d, u, 1./(u - d)], ]))
+        self.starts = self._time_distort(t_centers - 0.5 * t_exp)
+        self.stops = self._time_distort(t_centers + 0.5 * t_exp)
+        self.centers = 0.5 * (self.stops + self.starts)
 
     def _time_distort(self, xs):
         return xs + (7. / 60. / 24.) * np.cos(2. * np.pi * xs / 371.) # 7 light-minutes in days
 
     def project(self, f):
-        ys = np.zeros(len(self.Ps))
-        for n, P in enumerate(self.Ps):
-            ys[n] = P.project(f)
+        ys = np.zeros(len(self.starts))
+        for n, (d, u) in enumerate(zip(self.starts, self.stops)):
+            ys[n] = f.definite_integral(d, u)
         return ys
 
 def make_fake_data():
@@ -176,7 +143,7 @@ if __name__ == "__main__":
 
         # perform inferences in Fourier space
         dk = 1. / (4.1 * 365.25) # frequency resolution for testing
-        testks = np.arange(-200.5, 101., 1.) * dk + (truth.abks[0])[2]
+        testks = np.arange(-5.5, 5., 1.) * dk + (truth.abks[0])[2]
         amp2s = fit_sinusoids(testks, lcf, data, ivar)
 
         # save output
@@ -186,7 +153,7 @@ if __name__ == "__main__":
 
     # plot data
     plt.clf()
-    plt.plot(lcf.x_centers, data, "k.", ms=0.75)
+    plt.plot(lcf.centers, data, "k.", ms=0.75)
     plt.xlabel("time [day]")
     plt.ylabel("intensity")
     plt.savefig("foo.png")

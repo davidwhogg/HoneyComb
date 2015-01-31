@@ -21,7 +21,6 @@ class Function:
         if abks is not None:
             self.abks = np.atleast_2d(np.array(abks))
             J, foo = self.abks.shape
-            print J, foo
             assert foo == 3
             self.J = J
 
@@ -78,16 +77,18 @@ class LightCurveFootprint:
     # `LightCurveFootprint`
 
     A list of `Projection` objects that describe a Kepler-like
-    lightcurve's set of exposure times.
+    lightcurve's set of exposure times.  Note the importance of the
+    conversion to barycentric time.
     """
 
     def __init__(self):
         delta_t = 30. / 60. / 24. # days
         # make regular grid in days
-        t_centers = np.arange(0.5 * delta_t, 100., delta_t)
+        t_centers = np.arange(0.5 * delta_t, 4.1 * 365.25, delta_t) # 4.1 years
         t_exp = 0.95 * delta_t
         ds = t_centers - 0.5 * t_exp
         us = t_centers + 0.5 * t_exp
+        # distort time grid onto Barycentric Time
         ds = self._time_distort(ds)
         us = self._time_distort(us)
         self.x_centers = 0.5 * (ds + us)
@@ -96,7 +97,7 @@ class LightCurveFootprint:
             self.Ps.append(Projection([[d, u, 1./(u - d)], ]))
 
     def _time_distort(self, xs):
-        return xs + (8. / 60. / 24.) * np.cos(2. * np.pi * xs / 371.) # 8 light-minutes in days
+        return xs + (7. / 60. / 24.) * np.cos(2. * np.pi * xs / 371.) # 7 light-minutes in days
 
     def project(self, f):
         ys = np.zeros(len(self.Ps))
@@ -104,20 +105,64 @@ class LightCurveFootprint:
             ys[n] = P.project(f)
         return ys
 
-if __name__ == "__main__":
+def make_fake_data():
+    """
+    # `make_fake_data()`
+
+    make Kepler-like data
+    """
     np.random.seed(42)
     k0 = (2 * np.pi / 5.132342) * 60 * 24 # 5-min period -> frequency in days
-    dk = 0.01 * k0
+    dk = 0.05 * k0
     ks = k0 + dk * np.arange(-5., 5.1, 1.)
     abks = np.zeros((len(ks), 3))
     abks[:, 0] = 0.1 * np.random.normal(size=len(ks))
     abks[:, 1] = 0.1 * np.random.normal(size=len(ks))
     abks[:, 2] = ks
-    f = Function(1.0, abks)
+    fun = Function(1.0, abks)
     lcf = LightCurveFootprint()
+    data = lcf.project(fun) # project sinusoids
+    ivar = 100000. + np.zeros(len(data))
+    data += (1.0 / np.sqrt(ivar)) * np.random.normal(size=len(data)) # add noise
+    return lcf, data, ivar
+
+def fit_one_sinusoid(k, lcf, data, ivar):
+    """
+    # `fit_one_sinusoid`
+
+    fit a constant plus a sine and cosine at one k value.
+    """
+    f0 = Function(1.0, None)
+    fa = Function(0.0, [[1., 0., k], ])
+    fb = Function(0.0, [[0., 1., k], ])
+    A = np.array([lcf.project(f0), lcf.project(fa), lcf.project(fb)])
+    ATA = np.dot(A, ivar[:,None] * A.T)
+    ATb = np.dot(A, ivar * data)
+    pars = np.linalg.solve(ATA, ATb)
+    resid = data - np.dot(A.T, pars)
+    chi2 = np.dot(resid, ivar * resid)
+    a0, a, b = pars
+    return a0, a, b, chi2
+
+def fit_sinusoids(ks, lcf, data, ivar):
+    amp2s = np.zeros_like(ks)
+    for ii,k in enumerate(ks):
+        a0, a, b, chi2 = fit_one_sinusoid(k, lcf, data, ivar)
+        amp2s[ii] = a * a + b * b
+        print ii, k, amp2s[ii]
+    return amp2s
+
+if __name__ == "__main__":
+    lcf, data, ivar = make_fake_data()
     plt.clf()
-    # xplot = np.arange(0., 1000., 0.0001)
-    # plt.plot(xplot, f.evaluate(xplot), "k-", alpha=0.25)
-    plt.plot(lcf.x_centers, lcf.project(f), "k.", ms=0.75)
+    plt.plot(lcf.x_centers, data, "k.", ms=0.75)
     plt.savefig("foo.png")
-    print "Hello World!"
+    k0 = (2 * np.pi / 5.14) * 60 * 24 # 5.5-min period -> frequency in days
+    k1 = (2 * np.pi / 5.12) * 60 * 24 # 5-min period -> frequency in days
+    dk = 0.02 * (k1 - k0)
+    ks = np.arange(k0 + 0.5 * dk, k1, dk)
+    amp2s = fit_sinusoids(ks, lcf, data, ivar)
+    plt.clf()
+    plt.plot(ks, amp2s, "k.")
+    plt.axvline((2 * np.pi / 5.132342) * 60 * 24)
+    plt.savefig("bar.png")

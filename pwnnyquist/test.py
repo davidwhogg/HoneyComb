@@ -1,5 +1,6 @@
 import numpy as np
 import superpgram
+np.random.seed(42)
 
 starts = np.arange(0., 10.1, 1.)
 stops = np.arange(0.99, 11.2, 1.)

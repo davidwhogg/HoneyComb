@@ -5,27 +5,13 @@ import glob
 import matplotlib.pyplot as plt
 from sin_tests import fit_sine, show_sine
 
-# hdr["BJDREFF"]  # frac of day in BJD reference date
-# hdr["TELAPSE"]  # [d] TSTOP - TSTART
-# hdr["LIVETIME"]  # [d] TELAPSE multiplied by DEADC
-# hdr["DEADC"]  # deadtime correction
-# hdr["TIMEPIXR"]  # 0.5 / bin time beginning=0 middle=0.5 end=1
-# hdr["TIERRELA"]  # [d] relative time error
-# hdr["TIERABSO"]  # [d] absolute time error
-# hdr["INT_TIME"]  # [s] photon accumulation time per frame
-# hdr["READTIME"]  # [s] readout time per frame
-# hdr["FRAMETIM"]  # [s] frame time (INT_TIME + READTIME)
-# hdr["NUM_FRM"]  # number of frames per time stamp
-# hdr["TIMEDEL"]  # [d] time resolution of data
-# hdr["DEADAPP"]  # deadtime applied
-# hdr["NREADOUT"]  # number of read per cadence
-
 D = "/Users/angusr/angusr/data2"
 kid = "7341231"
 qs = range(16)
 
 st_utc, sp_utc, st_bjd, sp_bjd = [], [], [], []
 st_diff, sp_diff = [], []
+t_bjd, diff = [], []
 for q in qs:
     fname = glob.glob("%s/Q%s_public/kplr%s-*_llc.fits" % (D, q, kid.zfill(9)))
     print fname
@@ -59,16 +45,12 @@ for q in qs:
     st_diff.append(tstrt - bjdrefi - tstart)
     sp_diff.append(tstp - bjdrefi - tstop)
 
-# def fit_sine(x, y, w):
-#     M = np.ones((len(x), 2+1))
-#     M[:, 0] = np.sin(w*x)
-#     M[:, 1] = np.cos(w*x)
-#     A = np.linalg.solve(np.dot(M.T, M), np.dot(M.T, y))
-#     ys = A[0]*np.sin(w*x) + A[1]*np.cos(w*x) + A[2]
-#     return ys, A
+    t_bjd.append(tstart)
+    t_bjd.append(tstop)
+    diff.append(tstrt - bjdrefi - tstart)
+    diff.append(tstp - bjdrefi - tstop)
 
-def fit_sine(x, y, w):
-#     M = np.vstack((np.sin(w*x), np.cos(w*x), np.ones_like(x), x))
+def fit_sine_and_linear(x, y, w):
     M = np.ones((len(x), 4))
     M[:, 0] = np.sin(w*x)
     M[:, 1] = np.cos(w*x)
@@ -79,21 +61,21 @@ def fit_sine(x, y, w):
 
 st_diff = np.array(st_diff)
 st_bjd = np.array(st_bjd)
-
-w = 2*np.pi*1./372
-y, A = fit_sine(st_bjd, st_diff, w)
-xs = np.linspace(st_bjd[0], st_bjd[-1], 1000)
-ys = A[0]*np.sin(w*xs) + A[1]*np.cos(w*xs) + A[-2]
-
-# Calculate least-square values
-A = np.vstack((np.ones_like(st_bjd), st_bjd)).T
-c, m = np.linalg.solve(np.dot(A.T, A), np.dot(A.T, st_diff))
+diff = np.array(diff)
+t_bjd = np.array(t_bjd)
 
 plt.clf()
-plt.plot(st_bjd, st_diff, "k.")
-plt.plot(st_bjd, m*st_bjd+c)
-plt.plot(xs, ys+m*ys+c)
-plt.plot(sp_bjd, sp_diff, "k.")
+# plt.plot(st_bjd, st_diff, "k.")
+plt.plot(t_bjd, diff, "k.")
+plt.savefig("test")
+assert 0
+w = 2*np.pi*1./372
+y, A = fit_sine_and_linear(st_bjd, st_diff, w)
+xs = np.linspace(st_bjd[0], st_bjd[-1], 1000)
+ys = A[0]*np.sin(w*xs) + A[1]*np.cos(w*xs) + A[2]*xs + A[3]
+
+plt.plot(xs, ys)
 plt.xlabel("BJD")
 plt.ylabel("BJD - UTC (days)")
 plt.savefig("test")
+

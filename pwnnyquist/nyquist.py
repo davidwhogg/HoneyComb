@@ -78,7 +78,7 @@ class LightCurveFootprint:
         self.centers = 0.5 * (self.stops + self.starts)
 
     def _time_distort(self, xs):
-        return xs + (7. / 60. / 24.) * np.cos(2. * np.pi * xs / 371.) # 7 light-minutes in days
+        return xs + (3.2 / 60. / 24.) * np.cos(2. * np.pi * xs / 371.) # 3.2 light-minutes in days
 
     def project(self, f):
         ys = np.zeros(len(self.starts))
@@ -151,6 +151,7 @@ if __name__ == "__main__":
         output.close()
 
     # plot data
+    strt = time.time()
     plt.clf()
     plt.plot(lcf.centers, data, "k.", ms=0.75)
     plt.xlabel("time [day]")
@@ -167,3 +168,4 @@ if __name__ == "__main__":
     plt.ylabel("log10 squared amplitude of best-fit sinusoid")
     plt.xlim(np.min(testks), np.max(testks))
     plt.savefig("bar.png")
+    print "made plots:", time.time() - strt

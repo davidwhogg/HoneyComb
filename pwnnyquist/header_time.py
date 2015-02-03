@@ -34,7 +34,7 @@ def get_times(fnames):
         diff.append(tstp - bjdrefi - tstop)  # utc - bjd
     return np.array(t_bjd), np.array(diff), dt
 
-def fit_sine_and_linear(x, y, w):
+def fit_sine_and_linear(x, y, w, make_plot=False):
     """
     # `fit_sine_and_linear`
 
@@ -47,6 +47,18 @@ def fit_sine_and_linear(x, y, w):
     M[:, 2] = x
     A = np.linalg.solve(np.dot(M.T, M), np.dot(M.T, y))
     ys = A[0]*np.sin(w*x) + A[1]*np.cos(w*x) + A[2]*x + A[3]
+
+    # plot difference between UTC and BJD
+    if make_plot == True:
+        plt.clf()
+        plt.plot(x, y, "k.")
+        xs = np.linspace(x[0], x[-1], 1000)
+        ys = A[0]*np.sin(w*xs) + A[1]*np.cos(w*xs) + A[2]*xs + A[3]
+        plt.plot(xs, ys)
+        plt.xlabel("BJD - 2454833")
+        plt.ylabel("BJD - UTC (days)")
+        plt.savefig("test")
+
     return ys, A
 
 def bjd2utc(bjd, fnames):
@@ -59,30 +71,31 @@ def bjd2utc(bjd, fnames):
 
     w = 2*np.pi/372
     t_bjd, diff, dt = get_times(fnames)
-    y, A = fit_sine_and_linear(t_bjd, diff, w)
+    y, A = fit_sine_and_linear(t_bjd, diff, w, make_plot=True)
     return bjd + A[0]*np.sin(w*bjd) + A[1]*np.cos(w*bjd) + A[2]*bjd + A[3]
 
-def real_footprint(t, fnames):
+def real_footprint(t):
     """
     # `real_footprint`
 
     Takes real Kepler time values for a certain target.
-    fnames is a list of filenames for all available long-cadence fits files.
-    Fits a sinusoid with a period of 372(?) days and linear trend to the
-    difference between BJD and UTC time for that star's header values and
-    returns the spacecraft-UTC start, stop and centre times.
+    Returns the spacecraft-UTC start, stop and centre times.
+    A is an array of coefficients for a sinusoid + linear trend, fit to the
+    timing data of 491 asteroseismic targets that are randomly distributed on
+    the CCD.
     """
 
+    A = np.genfromtxt("A.txt").T
     w = 2*np.pi/372
-    t_bjd, diff, dt = get_times(fnames)
-    y, A = fit_sine_and_linear(t_bjd, diff, w)
-    stops = bjd2utc(t, fnames)
+    dt = 0.02043359821692
+    stops = t + A[0]*np.sin(w*t) + A[1]*np.cos(w*t) + A[2]*t + A[3]
     starts = stops - dt
     centers = stops - .5*dt
     return starts, stops, centers
 
 if __name__ == "__main__":
 
+    # Test on a real target
     D = "/Users/angusr/angusr/data2"
     kid = "7341231"  # a kepler target with lc and sc data chosen at `random'
     fnames = []
@@ -100,7 +113,7 @@ if __name__ == "__main__":
 
     # convert BJDs to UTCs
     x = np.array(x) + 2454833
-    starts, stops, centers = real_footprint(x, fnames)
+    starts, stops, centers = real_footprint(x)
 
     # plot correction
     plt.clf()

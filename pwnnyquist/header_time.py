@@ -3,11 +3,11 @@ import pyfits
 import glob
 import matplotlib.pyplot as plt
 
-def real_footprint(t):
+def bjd2utc(t):
     """
     # `real_footprint`
 
-    Takes real Kepler time values for a certain target.
+    Takes real Kepler (BJD) time values for a certain target.
     Returns the spacecraft-UTC start, stop and centre times.
     A is an array of coefficients for a sinusoid + linear trend, fit to the
     timing data of 491 asteroseismic targets that are randomly distributed on
@@ -17,10 +17,8 @@ def real_footprint(t):
     A = np.genfromtxt("A.txt").T
     w = 2*np.pi/372
     dt = 0.02043359821692
-    stops = t + A[0]*np.sin(w*t) + A[1]*np.cos(w*t) + A[2]*t + A[3]
-    starts = stops - dt
-    centers = stops - .5*dt
-    return starts, stops, centers
+
+    return t + A[0]*np.sin(w*t) + A[1]*np.cos(w*t) + A[2]*t + A[3]
 
 if __name__ == "__main__":
 
@@ -42,11 +40,11 @@ if __name__ == "__main__":
 
     # convert BJDs to UTCs
     x = np.array(x) + 2454833
-    starts, stops, centers = real_footprint(x)
+    utc = bjd2utc(x)
 
     # plot correction
     plt.clf()
-    plt.plot(x, x-stops, "k.")
+    plt.plot(x, utc, "k.")
     plt.xlabel("BJD")
     plt.ylabel("BJD-UTC (days)")
     plt.savefig("demonstrate")

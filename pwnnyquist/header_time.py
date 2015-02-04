@@ -5,19 +5,18 @@ import matplotlib.pyplot as plt
 
 def bjd2utc(t):
     """
-    # `real_footprint`
+    # `bjd2utc`
 
     Takes real Kepler (BJD) time values for a certain target.
-    Returns the spacecraft-UTC start, stop and centre times.
+    Returns the spacecraft-UTC times (in days).
     A is an array of coefficients for a sinusoid + linear trend, fit to the
     timing data of 491 asteroseismic targets that are randomly distributed on
     the CCD.
     """
 
     A = np.genfromtxt("A.txt").T
-    w = 2*np.pi/372
-    dt = 0.02043359821692
-
+    w = 2*np.pi/372.5  # angular frequency (days-1)
+    dt = 0.02043359821692  # interval between observations (days)
     return t + A[0]*np.sin(w*t) + A[1]*np.cos(w*t) + A[2]*t + A[3]
 
 if __name__ == "__main__":

@@ -3,6 +3,19 @@ import pyfits
 import glob
 import matplotlib.pyplot as plt
 
+def real_footprint(t):
+    """
+    # `real_footprint`
+
+    Takes real Kepler (BJD) time values for a certain target and returns
+    estimates of the starts, stops and centres
+    """
+    dt = 0.02043359821692  # interval between observations (days)
+    stops = t
+    starts = t - dt
+    centres = t - .5*dt
+    return starts, stops, centres
+
 def bjd2utc(t):
     """
     # `bjd2utc`
@@ -16,7 +29,6 @@ def bjd2utc(t):
 
     A = np.genfromtxt("A.txt").T
     w = 2*np.pi/372.5  # angular frequency (days-1)
-    dt = 0.02043359821692  # interval between observations (days)
     return t + A[0]*np.sin(w*t) + A[1]*np.cos(w*t) + A[2]*t + A[3]
 
 if __name__ == "__main__":
@@ -38,7 +50,7 @@ if __name__ == "__main__":
         x.extend(tbdata["TIME"])
 
     # convert BJDs to UTCs
-    x = np.array(x) + 2454833
+    x = np.array(x) + 2454833  # days
     utc = bjd2utc(x)
 
     # plot correction

@@ -18,7 +18,7 @@ import glob
 def corrected_data():
     D = "/Users/angusr/Python/HoneyComb/pywnnyquist/tmp748248775441"
     fnames = glob.glob("%s/*.dat" % D)
-    x, y, yerr = [], [], [], []
+    x, y, yerr = [], [], []
     for fname in fnames:
         data = np.genfromtxt(fname, skip_header=9)
         x = data[0]
@@ -27,8 +27,7 @@ def corrected_data():
         y.extend(data/med-1)
         abs_yerr = data[4]
         yerr.extend(abs_yerr/med)
-    l = np.isfinite(x) * np.isfinite(y) * np.isfinite(yerr)
-    x, y, yerr = x[l], y[l], yerr[l]
+    x, y, yerr = np.array(x), np.array(y), np.array(yerr)
     x *= 24*3600  # convert to seconds
     ivar = 1./yerr**2
     y = np.array([i.astype("float64") for i in y])
@@ -88,13 +87,9 @@ if __name__ == "__main__":
     # kid = "3427720"
     # kid = "3632418"
     kid = "7341231"
-    x, y, yerr, ivar = corrected_data()
+#     x, y, yerr, ivar = corrected_data()
     fs = np.linspace(0.0002, 0.0005, 1000)  # Hz
     ws, fs, truths = freqs(kid, fs)
-
-    # fft
-    pgram = nufft.nufft3(x, y, ws)
-    p = np.sqrt(np.real(pgram)**2 + np.imag(pgram)**2)
 
     # pwnnyquist
     starts, stops, centres = real_footprint(x)

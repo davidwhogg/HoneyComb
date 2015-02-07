@@ -13,6 +13,28 @@ import superpgram as spg
 from header_time import real_footprint
 import george
 from george.kernels import ExpSquaredKernel
+import glob
+
+def corrected_data():
+    D = "/Users/angusr/Python/HoneyComb/pywnnyquist/tmp748248775441"
+    fnames = glob.glob("%s/*.dat" % D)
+    x, y, yerr = [], [], [], []
+    for fname in fnames:
+        data = np.genfromtxt(fname, skip_header=9)
+        x = data[0]
+        y = data[3]
+        med = np.median(data)
+        y.extend(data/med-1)
+        abs_yerr = data[4]
+        yerr.extend(abs_yerr/med)
+    l = np.isfinite(x) * np.isfinite(y) * np.isfinite(yerr)
+    x, y, yerr = x[l], y[l], yerr[l]
+    x *= 24*3600  # convert to seconds
+    ivar = 1./yerr**2
+    y = np.array([i.astype("float64") for i in y])
+    ivar = np.array([i.astype("float64") for i in ivar])
+    return x, y, yerr, ivar
+
 
 def load_data(kid, sc):
 
@@ -61,12 +83,12 @@ def freqs(kid, fs):
 
 if __name__ == "__main__":
 
-#     kid = "8006161"  # a kepler target with lc and sc data chosen at `random'
+    # kid = "8006161"
     # kid = "7103006"
     # kid = "3427720"
-#     kid = "3632418"
+    # kid = "3632418"
     kid = "7341231"
-    x, y, yerr, ivar = load_data(kid, sc=True)
+    x, y, yerr, ivar = corrected_data()
     fs = np.linspace(0.0002, 0.0005, 1000)  # Hz
     ws, fs, truths = freqs(kid, fs)
 
@@ -94,10 +116,6 @@ if __name__ == "__main__":
     x, y, yerr, ivar = load_data(kid, sc=False)
     ws, fs, truths = freqs(kid, fs)
 
-    # fft
-#     pgram = nufft.nufft3(x, y, ws)
-#     p = np.sqrt(np.real(pgram)**2 + np.imag(pgram)**2)
-
     # pwnnyquist
     starts, stops, centres = real_footprint(x)
     testks = ws
@@ -108,11 +126,4 @@ if __name__ == "__main__":
         for truth in truths:
             plt.axvline(truth*1e-6, color=c.blue, linestyle="--")
     plt.xlim(min(fs), max(fs))
-
-
-#     if len(truths):
-#         for truth in truths:
-#             plt.axvline(truth*1e-6, color=c.blue, linestyle="--")
-#     plt.plot(fs, amp2s, "k")
-#     plt.xlim(min(fs), max(fs))
     plt.savefig("fft")

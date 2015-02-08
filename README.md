@@ -4,9 +4,9 @@ Asteroseismology on the cheap.  Or really the expensive.
 
 ## Authors
 
-* Ruth Angus (Oxford) (Harvard CfA)
-* Dan Foreman-Mackey (NYU CCPP)
-* David W. Hogg (NYU CCPP) (MPIA)
+* **Ruth Angus** (Oxford) (Harvard CfA)
+* **Dan Foreman-Mackey** (NYU CCPP)
+* **David W. Hogg** (NYU CCPP) (MPIA)
 
 ## License
 

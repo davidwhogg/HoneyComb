@@ -75,6 +75,8 @@ def freqs(kid, fs):
     ws = 2*np.pi*fs
     return ws, fs, truths
 
+# def triangular_smoothing(x, y, yerr):
+
 if __name__ == "__main__":
 
     kid = "8006161"
@@ -136,8 +138,9 @@ if __name__ == "__main__":
         for truth in truths:
             plt.axvline(truth*1e-6, color=".3", linestyle="-.")
     plt.xlim(min(fs), max(fs))
-    ax = plt.gca()
-    ax.set_yticklabels([])
+#     ax = plt.gca()
+#     ax.set_yticklabels([])
+    plt.ylim(0, 0.000005)
     plt.ylabel("$\mathrm{Long~cadence}$")
 
     # plot light curve
@@ -145,7 +148,7 @@ if __name__ == "__main__":
     plt.plot(x/24./3600, y, "k", alpha=.5)
     plt.xlabel("$\mathrm{Time~(days)}$")
     plt.ylabel("$\mathrm{Normalised~flux}$")
-    plt.xlim(min(x), max(x))
+    plt.xlim(min(x/24/3600), max(x/24/3600))
     plt.savefig("fft")
 
     import os

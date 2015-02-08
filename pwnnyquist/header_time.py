@@ -16,6 +16,19 @@ def real_footprint(t):
     centres = t - .5*dt
     return starts, stops, centres
 
+def real_footprint_sc(t):
+    """
+    # `real_footprint`
+
+    Takes real Kepler (BJD) time values for a certain target and returns
+    estimates of the starts, stops and centres
+    """
+    dt = 6.81119940564e-4  # interval between observations (days) (sc)
+    stops = t
+    starts = t - dt
+    centres = t - .5*dt
+    return starts, stops, centres
+
 def bjd2utc(t):
     """
     # `bjd2utc`

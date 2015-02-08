@@ -16,24 +16,24 @@ from george.kernels import ExpSquaredKernel
 import glob
 
 def corrected_data():
-    D = "/Users/angusr/Python/HoneyComb/pywnnyquist/tmp748248775441"
-    fnames = glob.glob("%s/*.dat" % D)
+    D = "/Users/angusr/Python/HoneyComb/pwnnyquist/tmp748248775441"
+    fnames = glob.glob("%s/kplr*" % D)
     x, y, yerr = [], [], []
     for fname in fnames:
-        data = np.genfromtxt(fname, skip_header=9)
-        x = data[0]
-        y = data[3]
-        med = np.median(data)
-        y.extend(data/med-1)
-        abs_yerr = data[4]
-        yerr.extend(abs_yerr/med)
+        data = np.genfromtxt(fname, skip_header=9).T
+        x.extend(data[0])
+        y.extend(data[5])
+        yerr.extend(data[6])
     x, y, yerr = np.array(x), np.array(y), np.array(yerr)
+    med = np.median(y)
+    y /= med
+    y -= 1
+    yerr /= med
     x *= 24*3600  # convert to seconds
     ivar = 1./yerr**2
     y = np.array([i.astype("float64") for i in y])
     ivar = np.array([i.astype("float64") for i in ivar])
     return x, y, yerr, ivar
-
 
 def load_data(kid, sc):
 
@@ -61,7 +61,6 @@ def load_data(kid, sc):
     x, y, yerr, q = np.array(x), np.array(y), np.array(yerr), np.array(q)
     l = np.isfinite(x) * np.isfinite(y) * np.isfinite(yerr) * (q==0)
     x, y, yerr = x[l], y[l], yerr[l]
-    x, y, yerr = sigma_clipping(x, y, yerr, sc)
 
     x *= 24*3600  # convert to seconds
 
@@ -87,35 +86,36 @@ if __name__ == "__main__":
     # kid = "3427720"
     # kid = "3632418"
     kid = "7341231"
-#     x, y, yerr, ivar = corrected_data()
+
+    # pwnnyquist short cadence data
+    x, y, yerr, ivar = corrected_data()
     fs = np.linspace(0.0002, 0.0005, 1000)  # Hz
     ws, fs, truths = freqs(kid, fs)
+    starts, stops, centres = real_footprint_sc(x)
+    amp2s = spg.superpgram(starts, stops, y, ivar, ws)
+    print amp2s
 
-    # pwnnyquist
-    starts, stops, centres = real_footprint(x)
-    testks = ws
-    amp2s = spg.superpgram(starts, stops, y, ivar, testks)
-
-    # plot
+    # plot light curve
     plt.clf()
     plt.subplot(3, 1, 1)
     plt.plot(x, y, "k.", alpha=.1)
+
+    # plot sc superpgram
     plt.subplot(3, 1, 2)
-    plt.plot(fs, p, "k")
+    plt.plot(fs, amp2s, "k")
     if len(truths):
         for truth in truths:
             plt.axvline(truth*1e-6, color=c.blue, linestyle="--")
     plt.xlim(min(fs), max(fs))
-    plt.subplot(3, 1, 3)
 
+    # pwnnyquist long cadence data
     x, y, yerr, ivar = load_data(kid, sc=False)
     ws, fs, truths = freqs(kid, fs)
-
-    # pwnnyquist
     starts, stops, centres = real_footprint(x)
-    testks = ws
-    amp2s = spg.superpgram(starts, stops, y, ivar, testks)
+    amp2s = spg.superpgram(starts, stops, y, ivar, ws)
 
+    # plot lc superpgram
+    plt.subplot(3, 1, 3)
     plt.plot(fs, amp2s, "k")
     if len(truths):
         for truth in truths:

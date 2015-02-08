@@ -27,6 +27,7 @@ the observations are (effectively) noisy projections of the world.
 "The world" is itself a large set of continuous functions (fields)
 of space, time, momentum, and so on.
 The world has an essentially infinite number of degrees of freedom,
-but the things we *need* to know about it are in many cases quite limited.
+while the observations are always limited in number and signal-to-noise.
+However, the things we *need* to know about the world are in many cases quite limited.
 Good data analysis will infer what we need to infer
-but avoid estimating all the details of the the continuous fields.
+but avoid estimating all the details of all the continuous fields.

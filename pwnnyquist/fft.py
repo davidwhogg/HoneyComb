@@ -25,6 +25,7 @@ def corrected_data(kid, D):
     x, y, yerr = np.array(x), np.array(y), np.array(yerr)
     l = np.isfinite(x) * np.isfinite(y) * np.isfinite(yerr)
     x, y, yerr = x[l], y[l], yerr[l]
+    l = 10000
     med = np.median(y)
     mean = np.mean(y)
     y /= med
@@ -75,7 +76,26 @@ def freqs(kid, fs):
     ws = 2*np.pi*fs
     return ws, fs, truths
 
-# def triangular_smoothing(x, y, yerr):
+def triangular_smoothing(x, y, yerr):
+    win = 1.*24*3600  # one day window
+    dt = 6.81119940564e-4  # interval between observations (days) (sc)
+    n = int(1./dt)/2
+    weights = (np.array(range(n)+[n]+range(n)[::-1])+1)/float(n)
+    weights -= max(weights) % 1.
+    nw = len(weights)
+    newy = np.zeros_like(y)
+    plt.clf()
+    plt.plot(x, y/np.mean(y), "k.")
+    for i in range(len(x)):
+        w = np.zeros_like(x)
+        l = (x[i]-(.5*win) < x) * (x < x[i]+(.5*win))
+        if i > nw/2 and i < len(x)-nw/2:
+            w[i-nw/2:i+nw/2+1] = weights
+            newy[i] = y[i]/np.average(y, weights=w)
+    plt.plot(x, newy, "r.")
+    plt.savefig("test")
+    l = newy!=0
+    return x[l], newy[l], yerr[l]
 
 if __name__ == "__main__":
 
@@ -91,9 +111,11 @@ if __name__ == "__main__":
     # pwnnyquist short cadence data
     x, y, yerr, ivar = corrected_data(kid, corrected_lc_dir)
 #     x, y, yerr, ivar = load_data(kid, kepler_lc_dir, sc=True)
+    x, y, yerr = triangular_smoothing(x, y, yerr)
 
 #     fs = np.linspace(0.00001, 0.00025, 10000)  # Hz 5515314
-    fs = np.arange(0.0035895, 0.00359065, 4e-9)  # Hz 8006161
+#     fs = np.arange(0.0035895, 0.00359065, 4e-9)  # Hz 8006161
+    fs = np.arange(0.003, 0.004, 4e-8)  # Hz 8006161
 #     fs = np.arange(0.0025, 0.003, 4e-8)  # Hz 5515314
     print len(fs)
     ws, fs, truths = freqs(kid, fs)

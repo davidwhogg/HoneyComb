@@ -93,9 +93,11 @@ if __name__ == "__main__":
 #     x, y, yerr, ivar = load_data(kid, kepler_lc_dir, sc=True)
 
 #     fs = np.linspace(0.00001, 0.00025, 10000)  # Hz 5515314
-    fs = np.arange(0.003, 0.004, 4e-8)  # Hz 8006161
+    fs = np.arange(0.0035895, 0.00359065, 4e-9)  # Hz 8006161
+#     fs = np.arange(0.0025, 0.003, 4e-8)  # Hz 5515314
     print len(fs)
     ws, fs, truths = freqs(kid, fs)
+    print np.sort(truths)
 
     # plot sc superpgram
     print ("calculating superpgram for short cadence data")
@@ -103,29 +105,20 @@ if __name__ == "__main__":
     amp2s = spg.superpgram(starts, stops, y, ivar, ws)
     plt.clf()
     plt.subplot(3, 1, 1)
-    plt.plot(fs, amp2s, "k", alpha=.7)
+    uHz = 3589
+    plt.plot(fs*1e6-uHz, amp2s, "k", alpha=.7)
     if len(truths):
         for truth in truths:
-            plt.axvline(truth*1e-6, color=".3", linestyle="-.")
-    plt.xlim(min(fs), max(fs))
-    ax = plt.gca()
-    ax.set_yticklabels([])
-    plt.ylabel("$\mathrm{Short~cadence}$")
-
-#     # lombscargle short cadence data
-#     print ("calculating Lomb-Scargle for short cadence data")
-#     model = LombScargle().fit(x, y, yerr)
-#     period = 1. / fs
-#     power = model.periodogram(period)
-#     plt.subplot(4, 1, 2)
-#     plt.plot(1./period, power, "k", alpha=.7)
-#     if len(truths):
-#         for truth in truths:
-#             plt.axvline(truth*1e-6, color=".5", linestyle="-.")
-#     plt.xlim(min(fs), max(fs))
+            plt.axvline(truth-uHz, color=".3", linestyle="-.")
+    plt.xlim(min(fs)*1e6-uHz, max(fs)*1e6-uHz)
 #     ax = plt.gca()
 #     ax.set_yticklabels([])
-#     plt.ylabel("$\mathrm{sc~ls}$")
+    plt.ylabel("$\mathrm{Short~cadence}$")
+    plt.xlabel("$Frequency - %s ~(\mu Hz)$" % uHz)
+    plt.axvline(min(fs)*1e6-uHz)
+    plt.axvline(min(fs)*1e6-uHz + 8e-9)
+    plt.axvline(0.6, color=".5")
+    plt.axvline(0.6 + 8e-3, color=".5")
 
     # pwnnyquist long cadence data
     print ("calculating superpgram for long cadence data")
@@ -133,15 +126,18 @@ if __name__ == "__main__":
     starts, stops, centres = real_footprint(x)
     amp2s = spg.superpgram(starts, stops, y, ivar, ws)
     plt.subplot(3, 1, 2)
-    plt.plot(fs, amp2s, "k", alpha=.7)
+    plt.plot(fs*1e6-uHz, amp2s, "k", alpha=.7)
     if len(truths):
         for truth in truths:
-            plt.axvline(truth*1e-6, color=".3", linestyle="-.")
-    plt.xlim(min(fs), max(fs))
+            plt.axvline(truth-uHz, color=".3", linestyle="-.")
+    plt.xlim(min(fs)*1e6-uHz, max(fs)*1e6-uHz)
 #     ax = plt.gca()
 #     ax.set_yticklabels([])
-    plt.ylim(0, 0.000005)
+    plt.ylim(0, 0.0000005)
     plt.ylabel("$\mathrm{Long~cadence}$")
+    plt.xlabel("$Frequency - %s ~(\mu Hz)$" % uHz)
+    plt.axvline(0.6, color=".5")
+    plt.axvline(0.6 + 8e-3, color=".5")
 
     # plot light curve
     plt.subplot(3, 1, 3)
@@ -149,7 +145,8 @@ if __name__ == "__main__":
     plt.xlabel("$\mathrm{Time~(days)}$")
     plt.ylabel("$\mathrm{Normalised~flux}$")
     plt.xlim(min(x/24/3600), max(x/24/3600))
-    plt.savefig("fft")
+    plt.subplots_adjust(hspace=.4)
+    plt.savefig("%sfft" % kid)
 
-    import os
-    os.system('say "your program has finished"')
+#     import os
+#     os.system('say "over"')

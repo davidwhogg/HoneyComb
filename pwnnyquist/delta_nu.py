@@ -67,36 +67,12 @@ def autocorr(fs, pgram, dnu, c):
 if __name__ == "__main__":
 
     # ask the question: "is there extra power at this frequency separation?"
-
-    # calculate freqs at which you need to compute spectrum
-    # try just one dnu
-    dnu = 149.4*1e-6 # Hz
-    fs1 = np.arange(0.003, 0.004, 4e-7)  # Hz 8006161
-    ws1 = 2*np.pi*fs1
-    fs2 = np.arange(0.003, 0.004, 4e-7)+dnu  # Hz 8006161
-    ws2 = 2*np.pi*fs2
-
-    # pwnnyquist short cadence data
     kid = "8006161"
     corrected_dir = "/Users/angusr/Python/HoneyComb/pwnnyquist/KASOC"
     kepler_dir = "/Users/angusr/.kplr/data/lightcurves/%s" % kid.zfill(9)
+
+    # compute supergram
     fs, amp2s = soup(kid, kepler_dir)
 
-#     x, y, yerr, ivar = corrected_data(kid, corrected_lc_dir)
-#     mean = np.mean(y)
-#     y -= mean
-#     starts, stops, centres = real_footprint_sc(x)
-#     ivar = 1./yerr**2
-
-#     print ("calculating superpgram for fs1")
-#     amp2s1 = spg.superpgram(starts, stops, y, ivar, ws1)
-#     autocorr(fs1, amp2s1, dnu)
-
+    # compute autocorrelation
     autocorr(fs, amp2s, dnu, c)
-
-#     print ("calculating superpgram for fs")
-#     amp2s2 = spg.superpgram(starts, stops, y, ivar, ws2)
-#
-#     plt.clf()
-#     plt.plot(fs1, amp2s1+amp2s2, "k")
-#     plt.savefig("test")

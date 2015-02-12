@@ -15,6 +15,7 @@ plt.rcParams.update(plotpar)
 def corrected_data(kid, D):
     fnames = glob.glob("%s/kplr%s*.dat" % (D, kid.zfill(9)))
     x, y, yerr = [], [], []
+    print fnames
     for fname in fnames[:3]:
         data = np.genfromtxt(fname, skip_header=9).T
         x.extend(data[0])

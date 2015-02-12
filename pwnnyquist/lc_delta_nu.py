@@ -5,7 +5,7 @@ from astero import astero
 data = astero()
 
 # search for delta nu in the long cadence data of Chaplin et al.
-D = "/Users/angusr/Python/Gyro/data"
+D = "/n/home11/rangus/Python/HoneyComb/pwnnyquist/data"
 kids = data.iKID
 nm = data.inu_max
 dnu = data.idnu
@@ -26,6 +26,8 @@ for i in range(len(kids)):
         # compute autocorrelation
         lags, acf = autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
         np.savetxt("%sacf.txt" np.transpose((lags, acf)))
+        assert 0
     except:
         "LinAlgError"
         print "No data found"
+        assert 0

@@ -20,24 +20,24 @@ for i in range(len(kids)):
 #     DIR = "/Users/angusr/angusr/data2/all_Qs"
     KDIR = DIR
 
-    try:
-        # compute supergram
-        fs, amp2s = soup(str(int(kids[i])), nm[i]*1e-6, DIR, c, KDIR)
-        f = h5py.File("%spgram.h5" % str(int(kids[i])), "w")
-        data = f.create_dataset("frequency", (len(fs), 2))
-        data[:, 0] = np.array(fs)
-        data[:, 1] = np.array(amp2s)
-        f.close()
+#     try:
+    # compute supergram
+    fs, amp2s = soup(str(int(kids[i])), nm[i]*1e-6, DIR, c, KDIR)
+    f = h5py.File("%spgram.h5" % str(int(kids[i])), "w")
+    data = f.create_dataset("frequency", (len(fs), 2))
+    data[:, 0] = np.array(fs)
+    data[:, 1] = np.array(amp2s)
+    f.close()
 
-        # compute autocorrelation
-        lags, acf = autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
-        f = h5py.File("%sacf.h5" % str(int(kids[i])), "w")
-        data = f.create_dataset("frequency", (len(lags), 2))
-        data[:, 0] = np.array(lags)
-        data[:, 1] = np.array(acf)
-        f.close()
-        assert 0
-    except:
-        "LinAlgError"
-        print "No data found"
-        assert 0
+    # compute autocorrelation
+    lags, acf = autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
+    f = h5py.File("%sacf.h5" % str(int(kids[i])), "w")
+    data = f.create_dataset("frequency", (len(lags), 2))
+    data[:, 0] = np.array(lags)
+    data[:, 1] = np.array(acf)
+    f.close()
+    assert 0
+#     except:
+#         "LinAlgError"
+#         print "No data found"
+#         assert 0

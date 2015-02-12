@@ -3,6 +3,7 @@ import numpy as np
 class astero(object):
 
     def __init__(self):
+        D = "/n/home11/rangus/Python/HoneyComb/pwnnyquist/data"
 
         # Load SDSS Astero data from table 1 - KIDs, nu_max, nu_max_err,
         # dnu, dnu_err, SDSS teffs and feh

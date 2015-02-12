@@ -20,11 +20,11 @@ for i in range(len(kids)):
 
     try:
         # compute supergram
-        fs, amp2s = soup(str(int(kids[i])), nm[i]*1e-6, DIR, c, KDIR, plot=True)
+        fs, amp2s = soup(str(int(kids[i])), nm[i]*1e-6, DIR, c, KDIR)
         np.savetxt("%sspg.txt" np.transpose((fs, amp2s)))
 
         # compute autocorrelation
-        lags, acf = autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c, plot=True)
+        lags, acf = autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
         np.savetxt("%sacf.txt" np.transpose((lags, acf)))
     except:
         "LinAlgError"

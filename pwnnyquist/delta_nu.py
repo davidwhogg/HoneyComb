@@ -26,8 +26,9 @@ def soup(kid, nm, DIR, c, KDIR, plot=False):
     mean = np.mean(y)
     y -= mean
 #     fs = np.arange(0.003, 0.004, 4e-7)  # Hz 8006161
-#     fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-8)
-    fs = np.arange(nm-.0001, nm+.0001, 4e-8)
+    fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-8)
+#     fs = np.arange(nm-.0001, nm+.0001, 4e-8)
+#     fs = np.arange(nm-.1*nm, nm+.1*nm, 4e-7)
     print len(fs), "frequencies"
     ws = 2*np.pi*fs
 

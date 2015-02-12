@@ -14,16 +14,18 @@ for i in range(len(kids)):
     print "kid = ", str(int(kids[i])), "nm = ", nm[i], "dnu = ", dnu[i]
 
     c = "lc"  # long or short cadence data?
-    DIR = "/Users/angusr/angusr/data2/all_Qs"
+    DIR = "/n/home11/rangus/.kplr/data/lightcurves/%s" \
+            % str(int(kids[i])).zfill(9)
     KDIR = DIR
 
     try:
         # compute supergram
         fs, amp2s = soup(str(int(kids[i])), nm[i]*1e-6, DIR, c, KDIR)
+        np.savetxt("%sspg.txt" np.transpose((fs, amp2s)))
 
         # compute autocorrelation
-        autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
-        assert 0
+        lags, acf = autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
+        np.savetxt("%sacf.txt" np.transpose((lags, acf)))
     except:
         "LinAlgError"
         print "No data found"

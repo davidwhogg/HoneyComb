@@ -17,6 +17,7 @@ for i in range(len(kids)):
 
     c = "lc"  # long or short cadence data?
     DIR = "/n/home11/rangus/.kplr/data/lightcurves/%s" \
+            % str(int(kids[i])).zfill(9)
 #     DIR = "/Users/angusr/angusr/data2/all_Qs"
     KDIR = DIR
 

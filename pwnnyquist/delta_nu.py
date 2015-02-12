@@ -11,7 +11,7 @@ plotpar = {'axes.labelsize': 12,
            'text.usetex': True}
 plt.rcParams.update(plotpar)
 
-def soup(kid, nm, DIR, c, kDIR):
+def soup(kid, nm, DIR, c, KDIR, plot=False):
 
     # load data (x is in seconds)
     if c == "lc":
@@ -26,7 +26,8 @@ def soup(kid, nm, DIR, c, kDIR):
     mean = np.mean(y)
     y -= mean
 #     fs = np.arange(0.003, 0.004, 4e-7)  # Hz 8006161
-    fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-8)
+#     fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-8)
+    fs = np.arange(nm-.0001, nm+.0001, 4e-8)
     print len(fs), "frequencies"
     ws = 2*np.pi*fs
 
@@ -46,45 +47,45 @@ def soup(kid, nm, DIR, c, kDIR):
     amp2s = spg.superpgram(starts, stops, y, ivar, ws)
 
     # plot superpgram
-    plt.clf()
-    uHz = nm*1e6
-    plt.plot(fs*1e6-uHz, amp2s, "k", alpha=.7, zorder=1)
-    try:
-        truths = np.genfromtxt("%s_freqs.txt" % kid).T  # uHz
-        print "frequency file found"
-        print truths
-        for truth in truths:
-            plt.axvline(truth-uHz, color="r", linestyle="-.", zorder=0)
-    except:
-        print "no frequency file"
-        pass
-    plt.xlim(min(fs)*1e6-uHz, max(fs)*1e6-uHz)
-    plt.ylabel("$\mathrm{Amp}^2$")
-    plt.xlabel("$Frequency - %s ~(\mu Hz)$" % uHz)
-    plt.savefig("%spgram_%s" % (kid, c))
+    if plot == True:
+        plt.clf()
+        uHz = nm*1e6
+        plt.plot(fs*1e6-uHz, amp2s, "k", alpha=.7, zorder=1)
+        try:
+            truths = np.genfromtxt("%s_freqs.txt" % kid).T  # uHz
+            print "frequency file found"
+            print truths
+            for truth in truths:
+                plt.axvline(truth-uHz, color="r", linestyle="-.", zorder=0)
+        except:
+            print "no frequency file"
+            pass
+        plt.xlim(min(fs)*1e6-uHz, max(fs)*1e6-uHz)
+        plt.ylabel("$\mathrm{Amp}^2$")
+        plt.xlabel("$Frequency - %s ~(\mu Hz)$" % uHz)
+        plt.savefig("%spgram_%s" % (kid, c))
     return fs, amp2s
 
-def autocorr(kid, fs, pgram, dnu, c):
+def autocorr(kid, fs, pgram, dnu, c, plot=False):
     fs *= 1e6  # convert Hz to uHz
     dnu *= 1e6
     acor =  emcee.autocorr.function(pgram)
     df = fs[1] - fs[0]
 
     print "calculating acf..."
-    plt.clf()
-    plt.plot(np.arange(len(acor))*df, acor, ".3", zorder=1)
+    lags = np.arange(len(acor))*df
     print "delta_nu = ", dnu
-    plt.axvline(dnu, color="r", linestyle="-.", zorder=0)
-    plt.xlim(dnu-.5*dnu, dnu+.5*dnu)
-    plt.xlabel("$\mathrm{Delta~nu~(uHz)}$")
-    plt.ylabel("$\mathrm{Correlation}$")
-    plt.savefig("%sacf_%s" % (kid, c))
+    if plot == True:
+        plt.clf()
+        plt.plot(lags, acor, ".3", zorder=1)
+        plt.axvline(dnu, color="r", linestyle="-.", zorder=0)
+        plt.xlim(dnu-.5*dnu, dnu+.5*dnu)
+        plt.xlabel("$\mathrm{Delta~nu~(uHz)}$")
+        plt.ylabel("$\mathrm{Correlation}$")
+        plt.savefig("%sacf_%s" % (kid, c))
+    return lags, acor
 
 if __name__ == "__main__":
-
-    # ask the question: "is there extra power at this frequency separation?"
-    kid = "8006161"
-    dnu = 149.4*1e-6 # Hz
 
     D = "/Users/angusr/Python/HoneyComb/pwnnyquist"
     kids, nm, dnu = np.genfromtxt("%s/target_list.txt" % D, skip_header=1).T

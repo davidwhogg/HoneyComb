@@ -79,8 +79,8 @@ def freqs(kid, fs):
 
 if __name__ == "__main__":
 
-#     kid = "8006161"
-    kid = "5515314"
+    kid = "8006161"
+#     kid = "5515314"
 #     kid = "7103006"
 #     kid = "3427720"
 #     kid = "3632418"
@@ -92,9 +92,10 @@ if __name__ == "__main__":
 #     x, y, yerr, ivar = corrected_data(kid, corrected_lc_dir)
 # #     x, y, yerr, ivar = load_data(kid, kepler_lc_dir, sc=True)
 #
-    fs0 = .0001375
-    fs = np.arange(0.0001372, 0.00013752, 1e-10)  # Hz 5515314
-# #     fs = np.arange(0.003, 0.004, 4e-8)  # Hz 8006161
+    fs0 = .0001375  # 5515
+    fs0 = .003589  # 8006161
+#     fs = np.arange(0.0001372, 0.00013752, 1e-10)  # Hz 5515314
+    fs = np.arange(0.00358, 0.00356, 4e-8)  # Hz 8006161
 #     print len(fs)
     ws, fs, truths = freqs(kid, fs)
 #
@@ -130,7 +131,7 @@ if __name__ == "__main__":
 
     # pwnnyquist long cadence data
     plt.clf()
-    plt.subplot(4, 1, 1)
+    plt.subplot(3, 1, 1)
     print ("calculating superpgram for long cadence data")
     x, y, yerr, ivar = load_data(kid, kepler_lc_dir, sc=False)
     starts, stops, centres = real_footprint(x)
@@ -143,7 +144,7 @@ if __name__ == "__main__":
     plt.xlabel("$\mathrm{Frequency-135~(uHz)}$")
 
     # fft long cadence data
-    plt.subplot(4, 1, 2)
+    plt.subplot(3, 1, 2)
     print ("calculating  fft for long cadence data")
     pgram = nufft.nufft3(stops, y, ws)
     plt.plot((fs-fs0)*1e6, pgram, "k", alpha=.7)
@@ -154,7 +155,7 @@ if __name__ == "__main__":
     plt.xlabel("$\mathrm{Frequency-135~(uHz)}$")
 
     # LombScargle long cadence data
-    plt.subplot(4, 1, 3)
+    plt.subplot(3, 1, 3)
     print ("calculating LombScargle for long cadence data")
     periods = 1./fs
     model = LombScargle().fit(x, y, yerr)
@@ -168,10 +169,10 @@ if __name__ == "__main__":
     plt.subplots_adjust(hspace=.4)
 
     # plot light curve
-    plt.subplot(4, 1, 4)
-#     plt.subplot(3, 1, 3)
-    plt.plot(x/24./3600, y, "k.", alpha=.5)
-    plt.xlabel("$\mathrm{Time~(days)}$")
-    plt.ylabel("$\mathrm{Normalised~flux}$")
-    plt.xlim(min(x/24/3600), max(x/24/3600))
-    plt.savefig("giant")
+#     plt.subplot(4, 1, 4)
+# #     plt.subplot(3, 1, 3)
+#     plt.plot(x/24./3600, y, "k.", alpha=.5)
+#     plt.xlabel("$\mathrm{Time~(days)}$")
+#     plt.ylabel("$\mathrm{Normalised~flux}$")
+#     plt.xlim(min(x/24/3600), max(x/24/3600))
+    plt.savefig("giant2")

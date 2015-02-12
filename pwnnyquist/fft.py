@@ -1,11 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pyfits
-import nufft
 import superpgram as spg
 from header_time import real_footprint, real_footprint_sc
 import glob
-from gatspy.periodic import LombScargle
 
 plotpar = {'axes.labelsize': 12,
            'xtick.labelsize': 12,

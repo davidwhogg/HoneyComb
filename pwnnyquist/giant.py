@@ -98,6 +98,7 @@ if __name__ == "__main__":
     fs = np.arange(fs0-.000001, fs0+0.000001, 1e-9)  # Hz 8006161
     fs = np.arange(fs0-.00001, fs0+0.00001, 1e-8)  # Hz 8006161
     fs = np.arange(fs0-.0005, fs0+0.0005, 1e-6)  # Hz 8006161
+    fs = np.arange(fs0-.001, fs0+0.001, 1e-7)  # Hz 8006161
     print len(fs)
     ws, fs, truths = freqs(kid, fs)
 

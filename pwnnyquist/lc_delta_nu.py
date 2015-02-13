@@ -11,7 +11,7 @@ D = "/n/home11/rangus/Python/HoneyComb/pwnnyquist/data"
 kids = data.iKID
 nm = data.inu_max
 dnu = data.idnu
-l = nm < 300
+l = (nm < 300) * (nm > 0)
 kids, nm, dnu = kids[l], nm[l], dnu[l]
 
 for i in range(len(kids)):

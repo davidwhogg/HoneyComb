@@ -95,49 +95,94 @@ if __name__ == "__main__":
     fs0 = .0001375  # 5515
     fs0 = .003589  # 8006161
 #     fs = np.arange(0.0001372, 0.00013752, 1e-10)  # Hz 5515314
-    fs = np.arange(0.003588, 0.0036, 1e-9)  # Hz 8006161
+    fs = np.arange(fs0-.000001, fs0+0.000001, 1e-9)  # Hz 8006161
+    fs = np.arange(fs0-.00001, fs0+0.00001, 1e-8)  # Hz 8006161
+    fs = np.arange(fs0-.0005, fs0+0.0005, 1e-6)  # Hz 8006161
     print len(fs)
     ws, fs, truths = freqs(kid, fs)
 
-    # plot sc superpgram
-    print ("calculating superpgram for short cadence data")
-    starts, stops, centres = real_footprint_sc(x)
-    amp2s = spg.superpgram(starts, stops, y, ivar, ws)
+#     # plot sc superpgram
+#     print ("calculating superpgram for short cadence data")
+#     starts, stops, centres = real_footprint_sc(x)
+#     print len(ws)
+#     amp2s = spg.superpgram(starts, stops, y, ivar, ws)
+#     plt.clf()
+#     plt.subplot(3, 1, 1)
+#     plt.plot((fs-fs0)*1e6, amp2s, "k", alpha=.7)
+#     if len(truths):
+#         for truth in truths:
+#             print truth
+#             plt.axvline(truth*1e-6, color="r", linestyle="-.")
+#     plt.xlim(min((fs-fs0)*1e6), max((fs-fs0)*1e6))
+#     plt.ylabel("$\mathrm{Short~cadence}$")
+#     plt.xlabel("$\mathrm{Frequency-%s~(uHz)}$" % (fs0*1e6))
+
+#     # fft long cadence data
+#     plt.subplot(3, 1, 2)
+#     print ("calculating  fft for short cadence data")
+#     print len(ws)
+#     pgram = nufft.nufft3(stops, y, ws)
+#     plt.plot((fs-fs0)*1e6, pgram, "k", alpha=.7)
+#     if len(truths):
+#         for truth in truths:
+#             plt.axvline(truth*1e-6, color="r", linestyle="-.")
+#     plt.xlim(min((fs-fs0)*1e6), max((fs-fs0)*1e6))
+#     plt.ylabel("$\mathrm{FFT}$")
+#     plt.xlabel("$\mathrm{Frequency-%s~(uHz)}$" % (fs0*1e6))
+
+#     # lombscargle short cadence data
+#     print ("calculating Lomb-Scargle for short cadence data")
+#     model = LombScargle().fit(x, y, yerr)
+#     period = 1. / fs
+#     power = model.periodogram(period)
+#     plt.subplot(3, 1, 3)
+#     plt.plot(((fs)-fs0)*1e6, power, "k", alpha=.7)
+#     if len(truths):
+#         for truth in truths:
+#             plt.axvline(truth*1e-6, color="r", linestyle="-.")
+#     plt.xlim(min((fs-fs0)*1e6), max((fs-fs0)*1e6))
+#     plt.ylabel("$\mathrm{sc~ls}$")
+#     plt.xlabel("$\mathrm{Frequency-%s~(uHz)}$" % (fs0*1e6))
+#     plt.subplots_adjust(hspace=.3)
+
+    # pwnnyquist long cadence data
     plt.clf()
     plt.subplot(3, 1, 1)
-    plt.plot(fs-fs0, amp2s, "k", alpha=.7)
+    print ("calculating superpgram for long cadence data")
+    x, y, yerr, ivar = load_data(kid, kepler_lc_dir, sc=False)
+    starts, stops, centres = real_footprint(x)
+    amp2s = spg.superpgram(starts, stops, y, ivar, ws)
+    plt.plot((fs-fs0)*1e6, amp2s, "k", alpha=.7)
     if len(truths):
         for truth in truths:
             plt.axvline(truth*1e-6, color="r", linestyle="-.")
-    plt.xlim(min(fs), max(fs))
-    plt.ylabel("$\mathrm{Short~cadence}$")
-    plt.xlabel("$\mathrm{Frequency-%s~(uHz)}$" % fs0)
+    plt.ylabel("$\mathrm{SuperPgram}$")
+    plt.xlabel("$\mathrm{Frequency-%s~(uHz)}$" % (fs0*1e6))
 
     # fft long cadence data
     plt.subplot(3, 1, 2)
-    print ("calculating  fft for short cadence data")
+    print ("calculating  fft for long cadence data")
     pgram = nufft.nufft3(stops, y, ws)
     plt.plot((fs-fs0)*1e6, pgram, "k", alpha=.7)
     if len(truths):
         for truth in truths:
             plt.axvline(truth*1e-6, color="r", linestyle="-.")
     plt.ylabel("$\mathrm{FFT}$")
-    plt.xlabel("$\mathrm{Frequency-%s~(uHz)}$" % fs0)
+    plt.xlabel("$\mathrm{Frequency-%s~(uHz)}$" % (fs0*1e6))
 
-    # lombscargle short cadence data
-    print ("calculating Lomb-Scargle for short cadence data")
-    model = LombScargle().fit(x, y, yerr)
-    period = 1. / fs
-    power = model.periodogram(period)
+    # LombScargle long cadence data
     plt.subplot(3, 1, 3)
-    plt.plot(1./period-fs0, power, "k", alpha=.7)
+    print ("calculating LombScargle for long cadence data")
+    periods = 1./fs
+    model = LombScargle().fit(x, y, yerr)
+    power = model.periodogram(periods)
+    plt.plot((fs-fs0)*1e6, power, "k", alpha=.7)
     if len(truths):
         for truth in truths:
             plt.axvline(truth*1e-6, color="r", linestyle="-.")
-    plt.xlim(min(fs), max(fs))
-    plt.ylabel("$\mathrm{sc~ls}$")
-    plt.xlabel("$\mathrm{Frequency-%s~(uHz)}$" % fs0)
-    plt.subplots_adjust(hspace=.3)
+    plt.ylabel("$\mathrm{LS}$")
+    plt.xlabel("$\mathrm{Frequency-%s~(uHz)}$" % (fs0*1e6))
+    plt.subplots_adjust(hspace=.4)
 
 #     # pwnnyquist long cadence data
 #     plt.clf()

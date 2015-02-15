@@ -29,6 +29,7 @@ def soup(kid, nm, DIR, c, KDIR, plot=False):
 #     fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-8)
 #     fs = np.arange(nm-.0001, nm+.0001, 4e-8)
     fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-8)
+    fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-7)
     print len(fs), "frequencies"
     ws = 2*np.pi*fs
 
@@ -86,6 +87,33 @@ def autocorr(kid, fs, pgram, dnu, c, plot=False):
         plt.savefig("%sacf_%s" % (kid, c))
     return lags, acor
 
+def find_nearest(array, value):
+    idx = (np.abs(array-value)).argmin()
+    return array[idx]
+
+def Xcorr(kid, fs, pgram, dnu, c, plot=False):
+    fs *= 1e6  # convert Hz to uHz
+    dnu *= 1e6
+    template = np.zeros_like(fs)
+    fs0 = fs-fs[0]
+    print find_nearest(fs0, dnu)
+    assert 0
+    xcor =  np.correlate(pgram, template)
+    df = fs[1] - fs[0]
+
+    print "calculating acf..."
+    lags = np.arange(len(acor))*df
+    print "delta_nu = ", dnu
+    if plot == True:
+        plt.clf()
+        plt.plot(lags, acor, ".3", zorder=1)
+        plt.axvline(dnu, color="r", linestyle="-.", zorder=0)
+        plt.xlim(dnu-.5*dnu, dnu+.5*dnu)
+        plt.xlabel("$\mathrm{Delta~nu~(uHz)}$")
+        plt.ylabel("$\mathrm{Correlation}$")
+        plt.savefig("%sacf_%s" % (kid, c))
+    return lags, acor
+
 if __name__ == "__main__":
 
     D = "/Users/angusr/Python/HoneyComb/pwnnyquist"
@@ -104,7 +132,8 @@ if __name__ == "__main__":
             fs, amp2s = soup(str(int(kids[i])), nm[i]*1e-6, DIR, c, KDIR)
 
             # compute autocorrelation
-            autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
+#             autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
+            Xcorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
         except:
             "LinAlgError"
             print "No data found"

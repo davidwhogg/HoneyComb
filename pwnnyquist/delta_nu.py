@@ -29,7 +29,7 @@ def soup(kid, nm, DIR, c, KDIR, plot=False):
 #     fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-8)
 #     fs = np.arange(nm-.0001, nm+.0001, 4e-8)
     fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-8)
-    fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-7)
+#     fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-7)
     print len(fs), "frequencies"
     ws = 2*np.pi*fs
 

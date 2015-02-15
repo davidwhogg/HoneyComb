@@ -13,11 +13,6 @@ def dn_search(nmin, nmax, c):
     D = "/n/home11/rangus/Python/HoneyComb/pwnnyquist/data"
     # D = "/Users/angusr/Python/Gyro/data"
 
-    # light curve directory
-    DIR = "/n/home11/rangus/.kplr/data/lightcurves/%s" \
-            % str(int(kids[i])).zfill(9)
-#     DIR = "/Users/angusr/angusr/data2/all_Qs"
-
     kids = data.iKID
     nm = data.inu_max
     dnu = data.idnu
@@ -26,6 +21,11 @@ def dn_search(nmin, nmax, c):
 
     for i in range(len(kids)):
         print "kid = ", str(int(kids[i])), "nm = ", nm[i], "dnu = ", dnu[i]
+
+        # light curve directory
+        DIR = "/n/home11/rangus/.kplr/data/lightcurves/%s" \
+                % str(int(kids[i])).zfill(9)
+    #     DIR = "/Users/angusr/angusr/data2/all_Qs"
 
         c = "lc"  # long or short cadence data?
         KDIR = DIR

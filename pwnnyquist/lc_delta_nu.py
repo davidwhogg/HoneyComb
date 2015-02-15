@@ -10,7 +10,7 @@ def dn_search(nmin, nmax, c):
 
     # astero stellar param data directory
     D = "/n/home11/rangus/Python/HoneyComb/pwnnyquist/data"
-    # D = "/Users/angusr/Python/Gyro/data"
+#     D = "/Users/angusr/Python/Gyro/data"
 
     data = astero()
     kids = data.iKID
@@ -25,7 +25,7 @@ def dn_search(nmin, nmax, c):
         # light curve directory
         DIR = "/n/home11/rangus/.kplr/data/lightcurves/%s" \
                 % str(int(kids[i])).zfill(9)
-    #     DIR = "/Users/angusr/angusr/data2/all_Qs"
+#         DIR = "/Users/angusr/angusr/data2/all_Qs"
 
         c = "lc"  # long or short cadence data?
         KDIR = DIR
@@ -48,8 +48,8 @@ def dn_search(nmin, nmax, c):
 
 if __name__ == "__main__":
 
-#     nmin = sys.argv[1]
-#     nmax = sys.argv[2]
-#     c = str(sys.argv[3])
-    nmin, nmax, c = 0, 5000, "lc"
+    nmin = float(sys.argv[1])
+    nmax = float(sys.argv[2])
+    c = str(sys.argv[3])
+#     nmin, nmax, c = 0, 5000, "lc"
     dn_search(nmin, nmax, c)

@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from delta_nu import soup, autocorr
 from astero import astero
-data = astero()
 import h5py
 import sys
 
@@ -13,6 +12,7 @@ def dn_search(nmin, nmax, c):
     D = "/n/home11/rangus/Python/HoneyComb/pwnnyquist/data"
     # D = "/Users/angusr/Python/Gyro/data"
 
+    data = astero()
     kids = data.iKID
     nm = data.inu_max
     dnu = data.idnu

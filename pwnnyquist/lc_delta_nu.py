@@ -7,7 +7,17 @@ import h5py
 import sys
 
 # search for delta nu in the long cadence data of Chaplin et al.
-def dn_search(D, DIR, nmin, nmax, c):
+def dn_search(nmin, nmax, c):
+
+    # astero stellar param data directory
+    D = "/n/home11/rangus/Python/HoneyComb/pwnnyquist/data"
+    # D = "/Users/angusr/Python/Gyro/data"
+
+    # light curve directory
+    DIR = "/n/home11/rangus/.kplr/data/lightcurves/%s" \
+            % str(int(kids[i])).zfill(9)
+#     DIR = "/Users/angusr/angusr/data2/all_Qs"
+
     kids = data.iKID
     nm = data.inu_max
     dnu = data.idnu
@@ -38,17 +48,8 @@ def dn_search(D, DIR, nmin, nmax, c):
 
 if __name__ == "__main__":
 
-    # astero stellar param data directory
-    D = "/n/home11/rangus/Python/HoneyComb/pwnnyquist/data"
-    # D = "/Users/angusr/Python/Gyro/data"
-
-    # light curve directory
-    DIR = "/n/home11/rangus/.kplr/data/lightcurves/%s" \
-            % str(int(kids[i])).zfill(9)
-#     DIR = "/Users/angusr/angusr/data2/all_Qs"
-
 #     nmin = sys.argv[1]
 #     nmax = sys.argv[2]
 #     c = str(sys.argv[3])
     nmin, nmax, c = 0, 5000, "lc"
-    dn_search(D, DIR, nmin, nmax, c)
+    dn_search(nmin, nmax, c)

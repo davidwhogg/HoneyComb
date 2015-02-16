@@ -32,7 +32,7 @@ def dn_search(nmin, nmax, c):
 
         # compute supergram
         fs, amp2s = soup(str(int(kids[i])), nm[i]*1e-6, DIR, c, KDIR)
-        f = h5py.File("%spgram.h5" % str(int(kids[i])), "w")
+        f = h5py.File("%spgram_%s.h5" % (str(int(kids[i])), c), "w")
         data = f.create_dataset("pgram", (len(fs), 2))
         data[:, 0] = np.array(fs)
         data[:, 1] = np.array(amp2s)
@@ -40,7 +40,7 @@ def dn_search(nmin, nmax, c):
 
         # compute autocorrelation
         lags, acf = autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
-        f = h5py.File("%sacf.h5" % str(int(kids[i])), "w")
+        f = h5py.File("%sacf_%s.h5" % (str(int(kids[i])), c), "w")
         data = f.create_dataset("ACF", (len(lags), 2))
         data[:, 0] = np.array(lags)
         data[:, 1] = np.array(acf)

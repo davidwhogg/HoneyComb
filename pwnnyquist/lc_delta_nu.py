@@ -38,13 +38,16 @@ def dn_search(nmin, nmax, c):
         data[:, 1] = np.array(amp2s)
         f.close()
 
-        # compute autocorrelation
-        lags, acf = autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
-        f = h5py.File("%sacf_%s.h5" % (str(int(kids[i])), c), "w")
-        data = f.create_dataset("ACF", (len(lags), 2))
-        data[:, 0] = np.array(lags)
-        data[:, 1] = np.array(acf)
-        f.close()
+        if sum(amp2s) > 0:
+            # compute autocorrelation
+            lags, acf = autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
+            f = h5py.File("%sacf_%s.h5" % (str(int(kids[i])), c), "w")
+            data = f.create_dataset("ACF", (len(lags), 2))
+            data[:, 0] = np.array(lags)
+            data[:, 1] = np.array(acf)
+            f.close()
+        else:
+            print "no data"
 
 if __name__ == "__main__":
 

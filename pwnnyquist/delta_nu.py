@@ -16,57 +16,52 @@ def soup(kid, nm, DIR, c, KDIR, plot=False):
     # load data (x is in seconds)
     if c == "lc":
         x, y, yerr, ivar = load_data(kid, KDIR, sc=False)
+        starts, stops, centres = real_footprint(x)
     elif c == "sc":
-        try:
-            x, y, yerr, ivar = corrected_data(kid, DIR)
-        except:
-            x, y, yerr, ivar = load_data(kid, DIR, sc=True)
+        x, y, yerr, ivar = load_data(kid, DIR, sc=True)
+        starts, stops, centres = real_footprint_sc(x)
+#         try:
+#             x, y, yerr, ivar = corrected_data(kid, DIR)
+#         except:
+#             x, y, yerr, ivar = load_data(kid, DIR, sc=True)
 
     # subtract mean
     mean = np.mean(y)
     y -= mean
-#     fs = np.arange(0.003, 0.004, 4e-7)  # Hz 8006161
-#     fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-8)
-#     fs = np.arange(nm-.0001, nm+.0001, 4e-8)
-    fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-8)
-#     fs = np.arange(nm-.2*nm, nm+.2*nm, 4e-7)
+    fs = np.arange(nm-.25*nm, nm+.25*nm, 4e-8)
     print len(fs), "frequencies"
     ws = 2*np.pi*fs
 
     print ("calculating superpgram for %s data" % c)
-    if c == "sc":
-        starts, stops, centres = real_footprint_sc(x)
-    elif c == "lc":
-        starts, stops, centres = real_footprint(x)
     ivar = 1./yerr**2
     y = np.array([i.astype("float64") for i in y])
     ivar = np.array([i.astype("float64") for i in ivar])
 
-#     plt.clf()
-#     plt.plot(x, y, "k.")
-#     plt.savefig("%s_data" % kid)
+    if len(x):
+        amp2s = spg.superpgram(starts, stops, y, ivar, ws)
 
-    amp2s = spg.superpgram(starts, stops, y, ivar, ws)
-
-    # plot superpgram
-    if plot == True:
-        plt.clf()
-        uHz = nm*1e6
-        plt.plot(fs*1e6-uHz, amp2s, "k", alpha=.7, zorder=1)
-        try:
-            truths = np.genfromtxt("%s_freqs.txt" % kid).T  # uHz
-            print "frequency file found"
-            print truths
-            for truth in truths:
-                plt.axvline(truth-uHz, color="r", linestyle="-.", zorder=0)
-        except:
-            print "no frequency file"
-            pass
-        plt.xlim(min(fs)*1e6-uHz, max(fs)*1e6-uHz)
-        plt.ylabel("$\mathrm{Amp}^2$")
-        plt.xlabel("$Frequency - %s ~(\mu Hz)$" % uHz)
-        plt.savefig("%spgram_%s" % (kid, c))
-    return fs, amp2s
+        # plot superpgram
+        if plot == True:
+            plt.clf()
+            uHz = nm*1e6
+            plt.plot(fs*1e6-uHz, amp2s, "k", alpha=.7, zorder=1)
+            try:
+                truths = np.genfromtxt("%s_freqs.txt" % kid).T  # uHz
+                print "frequency file found"
+                print truths
+                for truth in truths:
+                    plt.axvline(truth-uHz, color="r", linestyle="-.", zorder=0)
+            except:
+                print "no frequency file"
+                pass
+            plt.xlim(min(fs)*1e6-uHz, max(fs)*1e6-uHz)
+            plt.ylabel("$\mathrm{Amp}^2$")
+            plt.xlabel("$Frequency - %s ~(\mu Hz)$" % uHz)
+            plt.savefig("%spgram_%s" % (kid, c))
+        return fs, amp2s
+    else:
+        print "no data found"
+        return fs, np.zeros_like(fs)
 
 def autocorr(kid, fs, pgram, dnu, c, plot=False):
     fs *= 1e6  # convert Hz to uHz

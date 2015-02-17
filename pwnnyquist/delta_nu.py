@@ -28,7 +28,7 @@ def soup(kid, nm, DIR, c, KDIR, plot=False):
     # subtract mean
     mean = np.mean(y)
     y -= mean
-    fs = np.arange(nm-.25*nm, nm+.25*nm, 4e-8)
+    fs = np.arange(nm-.5*nm, nm+.5*nm, 4e-8)
     print len(fs), "frequencies"
     ws = 2*np.pi*fs
 
@@ -127,8 +127,8 @@ if __name__ == "__main__":
             fs, amp2s = soup(str(int(kids[i])), nm[i]*1e-6, DIR, c, KDIR)
 
             # compute autocorrelation
-#             autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
-            Xcorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
+            autocorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
+#             Xcorr(str(int(kids[i])), fs, amp2s, dnu[i]*1e-6, c)
         except:
             "LinAlgError"
             print "No data found"

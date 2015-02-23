@@ -90,16 +90,20 @@ def find_nearest(array, value):
 
 if __name__ == "__main__":
 
-    D = "/Users/angusr/Python/HoneyComb/pwnnyquist"
+#     D = "/Users/angusr/Python/HoneyComb/pwnnyquist"
+    D = "/n/home11/rangus/Python/HoneyComb/pwnnyquist"
     kids, nm, dnu = np.genfromtxt("%s/target_list.txt" % D, skip_header=1).T
 
     for i in range(len(kids)):
         print "kid = ", str(int(kids[i])), "nm = ", nm[i], "dnu = ", dnu[i]
 
         c = "sc"  # long or short cadence data?
-        DIR = "/Users/angusr/Python/HoneyComb/pwnnyquist/KASOC"
-        KDIR = "/Users/angusr/.kplr/data/lightcurves/%s" \
+#         DIR = "/Users/angusr/Python/HoneyComb/pwnnyquist/KASOC"
+#         KDIR = "/Users/angusr/.kplr/data/lightcurves/%s" \
+#                 % str(int(kids[i])).zfill(9)
+        KDIR = "/n/home11/rangus/.kplr/data/lightcurves/%s" \
                 % str(int(kids[i])).zfill(9)
+        DIR = KDIR
 
         try:
             # compute supergram

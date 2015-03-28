@@ -19,6 +19,7 @@ See the file `LICENSE` for details.
 * Stellar asteroseismology or parameter estimation without explicit line identification or peak identification in the periodogram.
 * Replacement of the FFT or periodogram with a model that generates the data, including heterogenous, finite integration times on a heterogeneous grid, and heteroskedastic noise.
 * Measurement of stellar oscillations at frequencies well above the classic "Nyquist" limit.
+* Analysis and advice regarding exposure times and exoposure-time heterogeneity for astrophysics experiments.
 
 ## Philosophy
 

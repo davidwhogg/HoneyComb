@@ -1,1 +1,6 @@
+superpgram.c
 superpgram/*.c
+*.dat
+*.pkl
+*.so
+*.zip

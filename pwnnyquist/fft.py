@@ -15,8 +15,7 @@ plt.rcParams.update(plotpar)
 def corrected_data(kid, D):
     fnames = glob.glob("%s/kplr%s*.dat" % (D, kid.zfill(9)))
     x, y, yerr = [], [], []
-    print fnames
-    for fname in fnames[:3]:
+    for fname in fnames:
         data = np.genfromtxt(fname, skip_header=9).T
         x.extend(data[0])
         y.extend(data[5])
@@ -24,12 +23,12 @@ def corrected_data(kid, D):
     x, y, yerr = np.array(x), np.array(y), np.array(yerr)
     l = np.isfinite(x) * np.isfinite(y) * np.isfinite(yerr)
     x, y, yerr = x[l], y[l], yerr[l]
-#     med = np.median(y)
+    med = np.median(y)
 #     mean = np.mean(y)
-#     y /= med
-#     y -= 1
-#     yerr /= med
 #     y -= mean
+    y /= med
+    y -= 1
+    yerr /= med
     x *= 24*3600  # convert to seconds
     ivar = 1./yerr**2
     y = np.array([i.astype("float64") for i in y])
@@ -51,11 +50,8 @@ def load_data(kid, D, sc):
         q.extend(tbdata["SAP_QUALITY"])
         med = np.median(data[np.isfinite(data)])
         y.extend(data/med-1)
-#         mean = np.mean(data[np.isfinite(data)])
-#         y.extend(data-mean)
         abs_yerr = tbdata["PDCSAP_FLUX_ERR"]
         yerr.extend(abs_yerr/med)
-#         yerr.extend(abs_yerr)
     x, y, yerr, q = np.array(x), np.array(y), np.array(yerr), np.array(q)
     l = np.isfinite(x) * np.isfinite(y) * np.isfinite(yerr) * (q==0)
     x, y, yerr = x[l], y[l], yerr[l]

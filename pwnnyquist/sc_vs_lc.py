@@ -17,10 +17,10 @@ x, y = x[:n], y[:n]
 print len(x)
 
 print "calculating..."
-# starts, stops, centres = real_footprint_sc(stops)
-# amp2s = spg.
-fft = nufft.nufft3(x, y, fs*2*np.pi)
-fft = np.imag(fft)**2 + np.real(fft)**2
+starts, stops, centres = real_footprint_sc(x)
+fft = spg.superpgram(starts, stops, y, ivar, fs*2*np.pi)
+# fft = nufft.nufft3(x, y, fs*2*np.pi)
+# fft = np.imag(fft)**2 + np.real(fft)**2
 
 print "plotting..."
 plt.clf()

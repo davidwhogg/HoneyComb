@@ -3,17 +3,20 @@ This file is part of the HoneyComb project.
 Copyright 2015 David W. Hogg (NYU).
 """
 import numpy as np
+import matplotlib.pyplot as pl
 
 def make_one_signal(times, exptimes, A, B, omega):
     """
     `make_one_signal`
 
-    Check the analytic integration!
+    Check the analytic integration and trig identities!
+
+    Note:  We don't integrate, we *average*.
     """
-    t1s = times - 0.5 * exptimes
-    t2s = times + 0.5 * exptimes
-    return ((A / omega) * np.sin(omega * t2s) - A * np.sin(omega * t1s) -
-            (B / omega) * np.cos(omega * t2s) - A * np.cos(omega * t1s))
+    sineterm = 2. * np.sin(0.5 * omega * exptimes) / omega
+    meanangle = omega * times
+    return (A * np.cos(meanangle) * sineterm +
+            B * np.sin(meanangle) * sineterm) / exptimes
 
 def make_fake_data(random=True):
     """
@@ -28,14 +31,16 @@ def make_fake_data(random=True):
     n0 = 900.
     # make time vectors
     if random:
-        t2s = np.cumsum(np.random.randint(0.5 * n0, high = 1.5 * n0, size=ntimes) * dt)
+        t2s = np.cumsum(np.random.randint(0.75 * n0, high = 1.25 * n0, size=ntimes) * dt)
     else:
         t2s = np.cumsum(np.ones(ntimes) * n0 * dt)
     t1s = np.zeros_like(t2s)
     t1s[1:] = t2s[:-1]
     times = 0.5 * (t2s + t1s)
     exptimes = (t2s - t1s)
-    print times[-5:], exptimes[-5:]
+    print "make_fake_data(): made", n0, "exposures"
+    print times[-5:]
+    print exptimes[-5:]
     # make ivars with proper exptime variation; make noise
     ivars = 1. * exptimes
     fluxes = np.random.normal(size=ntimes) / np.sqrt(ivars)
@@ -49,6 +54,28 @@ def make_fake_data(random=True):
     fluxes += make_one_signal(times, exptimes, 0.2, 0.1, omega + 2. * delta_omega)
     return times, exptimes, fluxes, ivars
 
+def plot_exptimes(times, exptimes, fluxes, prefix, title=None):
+    """
+    `plot_exptimes`
+
+    Make a histogram of the exposure times we actually got.
+    """
+    pl.clf()
+    pl.subplot(2, 1, 1)
+    range = (0.001, 3600.001)
+    pl.hist(exptimes, bins=100, range=range, histtype="step", color="k")
+    pl.xlim(range)
+    pl.xlabel("exposure time (s)")
+    pl.ylabel("number")
+    if title is not None:
+        pl.title(title)
+    pl.subplot(2, 1, 2)
+    pl.plot(times, fluxes, "k.", alpha=0.5)
+    pl.xlabel("time (s)")
+    pl.ylabel("flux")
+    pl.savefig(prefix+".png")
+    return None
+
 def analyze_fake_data(times, exptimes, fluxes, ivars):
     """
     `analyze fake data`
@@ -56,14 +83,13 @@ def analyze_fake_data(times, exptimes, fluxes, ivars):
     Somehow figure out the signal-to-noise or information content of
     various frequency signals in the data.
 
-    Likelihood ratios to start.
-
-    This should use the superpgram; if it doesn't it is because I
-    suck.
+    Cramer-Rao bound to start?
     """
     return None
 
 if __name__ == "__main__":
     times1, exptimes1, fluxes1, ivars1 = make_fake_data()
+    plot_exptimes(times1, exptimes1, fluxes1, "hogg", "Hogg proposal")
     times2, exptimes2, fluxes2, ivars2 = make_fake_data(random=False)
-    analyze_data(times1, exptimes1, fluxes1, ivars1)
+    plot_exptimes(times2, exptimes2, fluxes2, "TESS", "TESS default")
+    analyze_fake_data(times1, exptimes1, fluxes1, ivars1)

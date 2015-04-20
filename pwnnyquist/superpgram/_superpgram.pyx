@@ -57,8 +57,14 @@ def superpgram(np.ndarray[DTYPE_t, ndim=1, mode="c"] starts,
             ivar = ivars[n]
             d = starts[n]
             u = stops[n]
-            c = (sin(wn * u) - sin(wn * d)) / wn
-            s = (cos(wn * d) - cos(wn * u)) / wn
+            # go trig identity
+            meanangle = 0.5 * wn * (u + d)
+            sortadeltat = 2. * sin(0.5 * wn * (u - d)) / wn
+            c = cos(meanangle) * sortadeltat
+            s = sin(meanangle) * sortadeltat
+            # the above four lines replace the following two lines
+            # c = (sin(wn * u) - sin(wn * d)) / wn
+            # s = (cos(wn * d) - cos(wn * u)) / wn
 
             ATA[0, 0] += c * c * ivar
             ATA[0, 1] += c * s * ivar

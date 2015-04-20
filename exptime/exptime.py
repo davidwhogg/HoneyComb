@@ -42,16 +42,17 @@ def make_fake_data(random=True):
     print times[-5:]
     print exptimes[-5:]
     # make ivars with proper exptime variation; make noise
-    ivars = 1. * exptimes
+    ivars = 1.e2 * exptimes
     fluxes = np.random.normal(size=ntimes) / np.sqrt(ivars)
     # make signals
     omega = 0.0189 # rad / s - peak frequency in angular units
     delta_omega = 0.0003 # rad / s - large frequency difference in angular units
-    fluxes += make_one_signal(times, exptimes, 0.1, 0.2, omega - 2. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.2, 0.2, omega - 1. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.2, 0.3, omega + 0. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.2, 0.2, omega + 1. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.2, 0.1, omega + 2. * delta_omega)
+    fluxes += 1.
+    fluxes += make_one_signal(times, exptimes, 0.001, 0.002, omega - 2. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.002, 0.002, omega - 1. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.002, 0.003, omega + 0. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.002, 0.002, omega + 1. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.002, 0.001, omega + 2. * delta_omega)
     return times, exptimes, fluxes, ivars
 
 def plot_exptimes(times, exptimes, fluxes, prefix, title=None):
@@ -71,7 +72,9 @@ def plot_exptimes(times, exptimes, fluxes, prefix, title=None):
         pl.title(title)
     pl.subplot(2, 1, 2)
     pl.plot(times, fluxes, "k.", alpha=0.5)
+    pl.xlim((6e7, 7.e7))
     pl.xlabel("time (s)")
+    pl.ylim(0.99, 1.01)
     pl.ylabel("flux")
     pl.savefig(prefix+".png")
     return None
@@ -85,6 +88,7 @@ def analyze_fake_data(times, exptimes, fluxes, ivars):
 
     Cramer-Rao bound to start?
     """
+    
     return None
 
 if __name__ == "__main__":

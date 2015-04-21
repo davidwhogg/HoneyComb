@@ -105,10 +105,11 @@ def plot_crbs(periods, crbs1, crbs2, name1=None, name2=None):
     Make a histogram of the exposure times we actually got.
     """
     pl.clf()
-    pl.plot(periods, crbs1[:,0], "k-")
+    pl.plot(periods, crbs1[:,0], "k-", label=name1)
     pl.plot(periods, crbs1[:,1], "k-")
-    pl.plot(periods, crbs2[:,0], "k-", alpha=0.5)
+    pl.plot(periods, crbs2[:,0], "k-", alpha=0.5, label=name2)
     pl.plot(periods, crbs2[:,1], "k-", alpha=0.5)
+    pl.legend(loc=2)
     pl.loglog()
     pl.xlabel("period (s)")
     big = max(np.max(crbs1), np.max(crbs2))
@@ -119,7 +120,7 @@ def plot_crbs(periods, crbs1, crbs2, name1=None, name2=None):
 
 if __name__ == "__main__":
     times1, exptimes1, fluxes1, ivars1 = make_fake_data()
-    periods = np.exp(np.arange(0., np.log(100000.), 0.05))
+    periods = np.exp(np.arange(0., np.log(100000.), 0.005))
     crbs1 = compute_crbs(periods, times1, exptimes1, ivars1)
     plot_exptimes(times1, exptimes1, fluxes1, "hogg", "Hogg proposal")
     times2, exptimes2, fluxes2, ivars2 = make_fake_data(random=False)

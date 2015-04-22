@@ -109,6 +109,8 @@ def plot_crbs(periods, crbs1, crbs2, name1=None, name2=None):
     pl.plot(periods, crbs1[:,1], "k-")
     pl.plot(periods, crbs2[:,0], "k-", alpha=0.5, label=name2)
     pl.plot(periods, crbs2[:,1], "k-", alpha=0.5)
+    pl.axvline(3600., color="k", alpha=0.5)
+    pl.axvline(1800., color="k", alpha=0.5)
     pl.legend(loc=2)
     pl.loglog()
     pl.xlabel("period (s)")

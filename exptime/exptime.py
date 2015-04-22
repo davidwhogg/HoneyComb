@@ -5,6 +5,12 @@ Copyright 2015 David W. Hogg (NYU).
 import numpy as np
 import matplotlib.pyplot as pl
 
+# globals
+ntimes = 70000 # number of data points
+dt = 2. # exposure time of sub-exposures (s)
+n0 = 900 # number of sub-exposures per exposure for S.O.P.
+period = 5.55 * 60. # solar period (s)
+
 def make_one_signal(times, exptimes, A, B, omega):
     """
     `make_one_signal`
@@ -25,10 +31,6 @@ def make_fake_data(random=True):
     Put an integrated signal with a few sinusioidal frequencies into
     some noisy data.
     """
-    # set parameters
-    ntimes = 70000
-    dt = 2. # sec
-    n0 = 900
     # make time vectors
     if random:
         t2s = np.cumsum(np.random.randint(0.75 * n0, high = 1.25 * n0, size=ntimes) * dt)
@@ -90,42 +92,97 @@ def compute_crbs(periods, times, exptimes, ivars):
     """
     nperiod = len(periods)
     crbs = np.zeros((nperiod, 2))
-    for ii, period in enumerate(periods):
-        omega = 2 * np.pi / period
+    for ii, P in enumerate(periods):
+        omega = 2 * np.pi / P
         modelA = make_one_signal(times, exptimes, 1., 0., omega)
         modelB = make_one_signal(times, exptimes, 0., 1., omega)
         crbs[ii, 0] = np.dot(modelA, ivars * modelA)
         crbs[ii, 1] = np.dot(modelB, ivars * modelB)
     return crbs
 
-def plot_crbs(periods, crbs1, crbs2, name1=None, name2=None):
+def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix):
     """
-    `plot_exptimes`
-
-    Make a histogram of the exposure times we actually got.
+    `plot_stuff`
     """
-    pl.clf()
-    pl.plot(periods, crbs1[:,0], "k-", label=name1)
-    pl.plot(periods, crbs1[:,1], "k-")
-    pl.plot(periods, crbs2[:,0], "k-", alpha=0.5, label=name2)
-    pl.plot(periods, crbs2[:,1], "k-", alpha=0.5)
-    pl.axvline(3600., color="k", alpha=0.5)
-    pl.axvline(1800., color="k", alpha=0.5)
-    pl.legend(loc=2)
-    pl.loglog()
-    pl.xlabel("period (s)")
-    big = max(np.max(crbs1), np.max(crbs2))
-    pl.ylim(1.e-8 * big, 1.e1 * big)
-    pl.ylabel("Cramer-Rao bounds")
-    pl.savefig("crb.png")
+    vline_periods = np.array([2. * n0 * dt,
+                              n0 * dt,
+                              2. * dt,
+                              dt])
+    nperiod, nlines = crbs1.shape
+    for ii in range(2):
+        if ii == 0:
+            x0 = period
+            xs = periods
+            vxs = vline_periods
+        if ii == 1:
+            x0 = 1. / period
+            xs = 1. / periods
+            vxs = 1. / vline_periods
+        pl.clf()
+        for jj in range(nlines):
+            name = None
+            if jj == 0: name=name1
+            pl.plot(xs, np.abs(crbs1[:,jj]), "k-", label=name)
+            if jj == 0: name=name2
+            pl.plot(xs, np.abs(crbs2[:,jj]), "k-", alpha=0.5, label=name)
+        for xx in vxs:
+            pl.axvline(xx, color="r", alpha=0.5)
+            pl.axvline(x0, color="b", alpha=0.5)
+        pl.legend(loc=2)
+        if ii == 0:
+            pl.loglog()
+            pl.xlabel("period (s)")
+        if ii == 1:
+            pl.semilogy()
+            pl.xlabel("frequency (Hz)")
+        big = max(np.max(crbs1), np.max(crbs2))
+        pl.ylim(1.e-8 * big, 1.e1 * big)
+        pl.ylabel(ylabel)
+        pl.savefig("%s%1d.png" % (prefix, ii))
     return None
 
+def plot_crbs(periods, crbs1, crbs2, name1, name2):
+    return plot_stuff(periods, crbs1, crbs2, name1, name2, "Cramer-Rao bounds", "crb")
+
+def plot_aliases(periods, aliases1, aliases2, name1, name2):
+    return plot_stuff(periods, aliases1, aliases2, name1, name2, "Alias projections", "alias")
+
+def compute_aliases(period, periods, times, exptimes, ivars):
+    """
+    `compute_aliases`
+
+    Compute, for each period in the `periods` list, the projection of
+    the given period onto all other periods.
+
+    Idiotically slow.
+    """
+    omega = 2 * np.pi / period
+    model0A = make_one_signal(times, exptimes, 1., 0., omega)
+    model0B = make_one_signal(times, exptimes, 0., 1., omega)
+    nperiod = len(periods)
+    aliases = np.zeros((nperiod, 4))
+    for ii, P in enumerate(periods):
+        omega = 2 * np.pi / P
+        modelA = make_one_signal(times, exptimes, 1., 0., omega)
+        modelB = make_one_signal(times, exptimes, 0., 1., omega)
+        aliases[ii, 0] = np.dot(model0A, ivars * modelA)
+        aliases[ii, 1] = np.dot(model0B, ivars * modelA)
+        aliases[ii, 0] = np.dot(model0A, ivars * modelB)
+        aliases[ii, 1] = np.dot(model0B, ivars * modelB)
+    return aliases
+
 if __name__ == "__main__":
+    # df = 1.e-3
+    # periods = 1. / np.arange(0.5 * df, 1.0, df) # (s)
+    dlnp = 0.002
+    periods = np.exp(np.arange(np.log(1.e2) + 0.5 * dlnp, np.log(1.e5), dlnp)) # (s)
     times1, exptimes1, fluxes1, ivars1 = make_fake_data()
-    periods = np.exp(np.arange(0., np.log(100000.), 0.005))
     crbs1 = compute_crbs(periods, times1, exptimes1, ivars1)
+    aliases1 = compute_aliases(period, periods, times1, exptimes1, ivars1)
     plot_exptimes(times1, exptimes1, fluxes1, "hogg", "Hogg proposal")
     times2, exptimes2, fluxes2, ivars2 = make_fake_data(random=False)
     crbs2 = compute_crbs(periods, times2, exptimes2, ivars2)
+    aliases2 = compute_aliases(period, periods, times2, exptimes2, ivars2)
     plot_exptimes(times2, exptimes2, fluxes2, "TESS", "TESS default")
     plot_crbs(periods, crbs1, crbs2, "Hogg proposal", "TESS default")
+    plot_aliases(periods, aliases1, aliases2, "Hogg proposal", "TESS default")

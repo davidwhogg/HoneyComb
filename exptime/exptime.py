@@ -108,7 +108,6 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix):
                               n0 * dt,
                               2. * dt,
                               dt])
-    nperiod, nlines = crbs1.shape
     for ii in range(2):
         if ii == 0:
             x0 = period
@@ -119,12 +118,8 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix):
             xs = 1. / periods
             vxs = 1. / vline_periods
         pl.clf()
-        for jj in range(nlines):
-            name = None
-            if jj == 0: name=name1
-            pl.plot(xs, np.abs(crbs1[:,jj]), "k-", label=name)
-            if jj == 0: name=name2
-            pl.plot(xs, np.abs(crbs2[:,jj]), "k-", alpha=0.5, label=name)
+        pl.plot(xs, crbs1, "g-", alpha=0.5, label=name1)
+        pl.plot(xs, crbs2, "k-", alpha=0.25, label=name2)
         for xx in vxs:
             pl.axvline(xx, color="r", alpha=0.5)
             pl.axvline(x0, color="b", alpha=0.5)
@@ -142,33 +137,41 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix):
     return None
 
 def plot_crbs(periods, crbs1, crbs2, name1, name2):
-    return plot_stuff(periods, crbs1, crbs2, name1, name2, "Cramer-Rao bounds", "crb")
+    return plot_stuff(periods,
+                      np.sum(crbs1, axis=1),
+                      np.sum(crbs2, axis=1), name1, name2, "Cramer-Rao bounds", "crb")
 
 def plot_aliases(periods, aliases1, aliases2, name1, name2):
-    return plot_stuff(periods, aliases1, aliases2, name1, name2, "Alias projections", "alias")
+    return plot_stuff(periods,
+                      np.max(np.abs(aliases1), axis=1),
+                      np.max(np.abs(aliases2), axis=1), name1, name2, "Worst cosine distance", "alias")
 
 def compute_aliases(period, periods, times, exptimes, ivars):
     """
     `compute_aliases`
 
-    Compute, for each period in the `periods` list, the projection of
-    the given period onto all other periods.
+    Compute, for each period in the `periods` list, the "cosine
+    distance" between the given period onto all other periods.
 
     Idiotically slow.
     """
     omega = 2 * np.pi / period
     model0A = make_one_signal(times, exptimes, 1., 0., omega)
     model0B = make_one_signal(times, exptimes, 0., 1., omega)
+    norm0A = np.sqrt(np.dot(model0A, ivars * model0A))
+    norm0B = np.sqrt(np.dot(model0B, ivars * model0B))
     nperiod = len(periods)
     aliases = np.zeros((nperiod, 4))
     for ii, P in enumerate(periods):
         omega = 2 * np.pi / P
         modelA = make_one_signal(times, exptimes, 1., 0., omega)
         modelB = make_one_signal(times, exptimes, 0., 1., omega)
-        aliases[ii, 0] = np.dot(model0A, ivars * modelA)
-        aliases[ii, 1] = np.dot(model0B, ivars * modelA)
-        aliases[ii, 0] = np.dot(model0A, ivars * modelB)
-        aliases[ii, 1] = np.dot(model0B, ivars * modelB)
+        normA = np.sqrt(np.dot(modelA, ivars * modelA))
+        normB = np.sqrt(np.dot(modelB, ivars * modelB))
+        aliases[ii, 0] = np.dot(model0A, ivars * modelA) / norm0A / normA
+        aliases[ii, 1] = np.dot(model0B, ivars * modelA) / norm0A / normA
+        aliases[ii, 0] = np.dot(model0A, ivars * modelB) / norm0B / normB
+        aliases[ii, 1] = np.dot(model0B, ivars * modelB) / norm0B / normB
     return aliases
 
 if __name__ == "__main__":

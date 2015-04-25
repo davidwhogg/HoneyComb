@@ -2,4 +2,6 @@
 *.aux
 *.log
 *.pdf
+*.pkl
 *.png
+vc.tex

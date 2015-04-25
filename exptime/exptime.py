@@ -88,7 +88,7 @@ def plot_exptimes(times, exptimes, fluxes, prefix, title=None):
         pl.title(title)
     pl.subplot(2, 1, 2)
     pl.plot(times / 86400., fluxes, "k.")
-    pl.xlim((135, 137))
+    pl.xlim((15, 17))
     pl.xlabel("time (d)")
     pl.ylim(0.997, 1.003)
     pl.ylabel("flux")

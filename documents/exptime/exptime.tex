@@ -1,5 +1,8 @@
 \documentclass[12pt, preprint]{aastex}
 
+\input{vc}
+\newcommand{\giturl}{\url{http://github.com/davidwhogg/HoneyComb}}
+
 \newcommand{\project}[1]{\textsl{#1}}
 \newcommand{\TESS}{\project{TESS}}
 \newcommand{\LSST}{\project{LSST}}
@@ -95,6 +98,12 @@ Here we consider the asteroseismological angle.
 \section{Discussion}
 
 \acknowledgements
-It is a pleasure to thank Zach Berta-Thompson for help.
+It is a pleasure to thank Zach Berta-Thompson for helpful information
+and discussions.
+This manuscript was generated within the \project{HoneyComb}
+open-source software project, at git hash
+\texttt{\githash~(\gitdate)}.
+All code and documentation for this project is available
+online\footnote{\texttt{\giturl}} under an open-source license.
 
 \end{document}

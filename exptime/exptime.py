@@ -6,6 +6,15 @@ import numpy as np
 import matplotlib.pyplot as pl
 import os
 import cPickle as pickle
+from functools import partial
+
+# multiprocessing trix DON'T WORK
+from multiprocessing import Pool
+nthreads = 1
+if nthreads == 1:
+    pmap = map
+else:
+    pmap = Pool(processes=nthreads).map
 
 # globals
 np.random.seed(42)
@@ -47,7 +56,7 @@ def make_fake_data(random=True):
     """
     # make time vectors
     if random:
-        t2s = np.cumsum(np.random.randint(0.75 * n0, high = 1.25 * n0, size=ntimes) * dt)
+        t2s = np.cumsum(np.random.randint(0.666667 * n0, high = 1.333333 * n0, size=ntimes) * dt)
     else:
         t2s = np.cumsum(np.ones(ntimes) * n0 * dt)
     t1s = np.zeros_like(t2s)
@@ -95,56 +104,79 @@ def plot_exptimes(times, exptimes, fluxes, prefix, title=None):
     pl.savefig(prefix+".png")
     return None
 
+class Compute_one_crb:
+    """
+    `Compute_one_crb`
+
+    Compute, for one period in the `periods` list, the Cramer-Rao
+    bound on the sin() and cos() terms.
+
+    It's a class to permit pickling.
+
+    Idiotically slow.
+    """
+    def __init__(self, times, exptimes, ivars):
+        self.times = times
+        self.exptimes = exptimes
+        self.ivars = ivars
+
+    def __call__(self, P):
+        omega = 2. * np.pi / P
+        modelA = make_one_signal(self.times, self.exptimes, 1., 0., omega)
+        modelB = make_one_signal(self.times, self.exptimes, 0., 1., omega)
+        return np.dot(modelA, self.ivars * modelA), np.dot(modelB, self.ivars * modelB)
+
 def compute_crbs(periods, times, exptimes, ivars):
     """
     `compute_crbs`
 
-    Compute, for each period in the `periods` list, the Cramer-Rao
-    bounds on the sin() and cos() terms.
+    Just a `map()`.
+    """
+    foo = Compute_one_crb(times, exptimes, ivars)
+    return np.array(pmap(foo, periods))
+
+class Compute_one_alias:
+    """
+    `Compute_one_alias`
+
+    Compute, for one period in the `periods` list, the "cosine
+    distance" between the given period onto all other periods.
+
+    It's a class to permit pickling.
 
     Idiotically slow.
     """
-    nperiod = len(periods)
-    crbs = np.zeros((nperiod, 2))
-    for ii, P in enumerate(periods):
-        if np.round(2. ** np.round(np.log(ii) / np.log(2.))).astype(int) == ii:
-            print "compute_crbs():", ii
-        omega = 2 * np.pi / P
-        modelA = make_one_signal(times, exptimes, 1., 0., omega)
-        modelB = make_one_signal(times, exptimes, 0., 1., omega)
-        crbs[ii, 0] = np.dot(modelA, ivars * modelA)
-        crbs[ii, 1] = np.dot(modelB, ivars * modelB)
-    return crbs
+    def __init__(self, period0, times, exptimes, ivars):
+        self.times = times
+        self.exptimes = exptimes
+        self.ivars = ivars
+        omega0 = 2. * np.pi / period0
+        mA = make_one_signal(times, exptimes, 1., 0., omega0)
+        mB = make_one_signal(times, exptimes, 0., 1., omega0)
+        self.mA = mA / np.sqrt(np.dot(mA, ivars * mA))
+        self.mB = mB / np.sqrt(np.dot(mB, ivars * mB))
 
-def compute_aliases(period, periods, times, exptimes, ivars):
+    def __call__(self, P):
+        omega = 2. * np.pi / P
+        modelA = make_one_signal(self.times, self.exptimes, 1., 0., omega)
+        modelB = make_one_signal(self.times, self.exptimes, 0., 1., omega)
+        ivmodelA = self.ivars * modelA
+        ivmodelB = self.ivars * modelB
+        normA2 = np.dot(modelA, ivmodelA)
+        normB2 = np.dot(modelB, ivmodelB)
+        return (np.sqrt(np.dot(self.mA, ivmodelA) ** 2 / normA2 +
+                        np.dot(self.mA, ivmodelB) ** 2 / normB2),
+                np.sqrt(np.dot(self.mB, ivmodelA) ** 2 / normA2 +
+                        np.dot(self.mB, ivmodelB) ** 2 / normB2))
+
+def compute_aliases(period0, periods, times, exptimes, ivars):
     """
     `compute_aliases`
 
-    Compute, for each period in the `periods` list, the "cosine
-    distance" between the given period onto all other periods.
-
-    Idiotically slow.
+    Just a `map()`.
     """
-    omega = 2 * np.pi / period
-    model0A = make_one_signal(times, exptimes, 1., 0., omega)
-    model0B = make_one_signal(times, exptimes, 0., 1., omega)
-    norm0A2 = np.dot(model0A, ivars * model0A)
-    norm0B2 = np.dot(model0B, ivars * model0B)
-    nperiod = len(periods)
-    aliases = np.zeros((nperiod, 2))
-    for ii, P in enumerate(periods):
-        if np.round(2. ** np.round(np.log(ii) / np.log(2.))).astype(int) == ii:
-            print "compute_aliases():", ii
-        omega = 2 * np.pi / P
-        modelA = make_one_signal(times, exptimes, 1., 0., omega)
-        modelB = make_one_signal(times, exptimes, 0., 1., omega)
-        normA2 = np.dot(modelA, ivars * modelA)
-        normB2 = np.dot(modelB, ivars * modelB)
-        aliases[ii, 0] = np.sqrt(np.dot(model0A, ivars * modelA) ** 2 / norm0A2 / normA2 +
-                                 np.dot(model0A, ivars * modelB) ** 2 / norm0B2 / normB2)
-        aliases[ii, 1] = np.sqrt(np.dot(model0B, ivars * modelA) ** 2 / norm0A2 / normA2 +
-                                 np.dot(model0B, ivars * modelB) ** 2 / norm0B2 / normB2)
-    return aliases
+    foo = Compute_one_alias(period0, times, exptimes, ivars)
+    return np.array(pmap(foo, periods))
 
 def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
     """
@@ -205,12 +237,12 @@ def plot_aliases(periods, aliases1, aliases2, name1, name2):
 if __name__ == "__main__":
     picklefn = "./exptime.pkl"
     if not os.path.exists(picklefn):
-        dlnp = 0.05 / ntimes
+        dlnp = 0.05 / ntimes # many of our best people died to bring us MAGIC number "0.05"
         periods = np.exp(np.arange(np.log(3.0e0) + 0.5 * dlnp, np.log(3.0e4), dlnp)) # (s)
         print "periods", len(periods)
         times1, exptimes1, fluxes1, ivars1 = make_fake_data()
-        crbs1 = compute_crbs(periods, times1, exptimes1, ivars1)
         aliases1 = compute_aliases(period, periods, times1, exptimes1, ivars1)
+        crbs1 = compute_crbs(periods, times1, exptimes1, ivars1)
         times2, exptimes2, fluxes2, ivars2 = make_fake_data(random=False)
         crbs2 = compute_crbs(periods, times2, exptimes2, ivars2)
         aliases2 = compute_aliases(period, periods, times2, exptimes2, ivars2)

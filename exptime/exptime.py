@@ -24,14 +24,18 @@ n0 = 900 # number of sub-exposures per exposure for S.O.P.
 period = 5.55 * 60. # solar period (s)
 
 def write_to_pickle(fn, stuff):
+    print "write_to_pickle(): writing", fn
     filehandler = open(fn, "wb")
     pickle.dump(stuff, filehandler)
     filehandler.close()
+    print "...done"
 
 def read_from_pickle(fn):
+    print "read_from_pickle(): reading", fn
     filehandler = open(fn, "rb")
     stuff = pickle.load(filehandler)
     filehandler.close()
+    print "...done"
     return stuff
 
 def make_one_signal(times, exptimes, A, B, omega):
@@ -80,6 +84,12 @@ def make_fake_data(random=True):
     fluxes += make_one_signal(times, exptimes, 0.0002, 0.0001, omega + 2. * delta_omega)
     return times, exptimes, fluxes, ivars
 
+def hogg_savefig(prefix):
+    for suffix in ["png",]: # "pdf"]:
+        fn = prefix + "." + suffix
+        print "hogg_savefig(): writing", fn
+        pl.savefig(fn)
+
 def plot_exptimes(times, exptimes, fluxes, prefix, title=None):
     """
     `plot_exptimes`
@@ -101,7 +111,7 @@ def plot_exptimes(times, exptimes, fluxes, prefix, title=None):
     pl.xlabel("time (d)")
     pl.ylim(0.997, 1.003)
     pl.ylabel("flux")
-    pl.savefig(prefix+".png")
+    hogg_savefig(prefix)
     return None
 
 class Compute_one_crb:
@@ -182,10 +192,9 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
     """
     `plot_stuff`
     """
-    vline_periods = np.array([2. * n0 * dt,
-                              n0 * dt,
-                              2. * dt,
-                              dt])
+    vline_periods = np.array([ntimes * n0 * dt,
+                              2. * n0 * dt,
+                              2. * dt])
     for ii in range(2):
         if ii == 0:
             x0 = period
@@ -196,10 +205,10 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
             xs = 1. / periods
             vxs = 1. / vline_periods
         pl.clf()
-        pl.plot(xs, crbs1, "g-", alpha=0.5, label=name1)
+        pl.plot(xs, crbs1, "k-", alpha=0.75, label=name1)
         pl.plot(xs, crbs2, "k-", alpha=0.25, label=name2)
         for xx in vxs:
-            pl.axvline(xx, color="r", alpha=0.5)
+            pl.axvline(xx, color="r", ls="--", alpha=0.5)
         # pl.axvline(x0, color="b", alpha=0.5)
         pl.legend(loc=2)
         if ii == 0:
@@ -219,7 +228,7 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
         else:
             pl.ylim(0., 1.)
         pl.xlim(min(xs), max(xs))
-        pl.savefig("%s%1d.png" % (prefix, ii))
+        hogg_savefig("%s%1d" % (prefix, ii))
     return None
 
 def plot_crbs(periods, crbs1, crbs2, name1, name2):
@@ -237,8 +246,10 @@ def plot_aliases(periods, aliases1, aliases2, name1, name2):
 if __name__ == "__main__":
     picklefn = "./exptime.pkl"
     if not os.path.exists(picklefn):
-        dlnp = 0.05 / ntimes # many of our best people died to bring us MAGIC number "0.05"
-        periods = np.exp(np.arange(np.log(3.0e0) + 0.5 * dlnp, np.log(3.0e4), dlnp)) # (s)
+        #dlnp = 0.05 / ntimes # many of our best people died to bring us MAGIC number "0.05"
+        #periods = np.exp(np.arange(np.log(3.0e0) + 0.5 * dlnp, np.log(3.0e4), dlnp)) # (s)
+        df = 0.00005 / ntimes # (Hz)
+        periods = 1. / np.arange(1./1.e5 + 0.5 * df, 1./1.e2, df) # (s)
         print "periods", len(periods)
         times1, exptimes1, fluxes1, ivars1 = make_fake_data()
         aliases1 = compute_aliases(period, periods, times1, exptimes1, ivars1)

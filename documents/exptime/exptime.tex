@@ -7,6 +7,10 @@
 \newcommand{\TESS}{\project{TESS}}
 \newcommand{\LSST}{\project{LSST}}
 
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\transpose}[1]{{#1}^{\mathsf{T}}}
+\newcommand{\inverse}[1]{{#1}^{-1}}
+
 \begin{document}
 \title{
   Vary all the exposure times!
@@ -74,6 +78,8 @@ Costs and benefits are discussed critically.
   ---
   old-school statistics
   ---
+  signal processing
+  ---
   surveys
   ---
   time-domain sickness
@@ -91,7 +97,34 @@ Costs of tracking (in the system and in data analysis) the exposure times used.
 
 Here we consider the asteroseismological angle.
 
+\section{Generative model}
+
+\begin{eqnarray}
+\transpose{y} &\equiv& [y_{1}, y_{2}, \cdots , y_{N}]
+\\
+y_{n} &=& \int_{t_{1n}}^{t_{2n}} S(t)\,\dd t + \mbox{noise}
+\quad.
+\end{eqnarray}
+
 \section{Information theory}
+
+\begin{eqnarray}
+I_{k} &=& \transpose{m}_{k}\cdot\inverse{C}\cdot m_{k}
+\\
+\transpose{m}_{k} &\equiv& [m_{k1}, m_{k2}, \cdots , m_{kN}]
+\\
+m_{kn} &\equiv& \int_{t_{1n}}^{t_{2n}} g_{k}(t)\,\dd t
+\\
+g_{k}(t) &\equiv& \cos(\omega_{k}\,t + \phi_{k})
+\quad .
+\end{eqnarray}
+
+\begin{eqnarray}
+\cos\alpha_{kk'} &=& \transpose{\hat{m}}_{k}\cdot\inverse{C}\cdot\hat{m}_{k'}
+\\
+\hat{m}_{k} &\equiv& \frac{m_{k}}{\sqrt{\transpose{m}_{k}\cdot\inverse{C}\cdot m_{k}}}
+\quad .
+\end{eqnarray}
 
 \section{Data analysis}
 

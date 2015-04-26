@@ -2,11 +2,11 @@
 This file is part of the HoneyComb project.
 Copyright 2015 David W. Hogg (NYU).
 """
+import os
 import numpy as np
 import matplotlib.pyplot as pl
-import os
+import matplotlib.transforms as transforms
 import cPickle as pickle
-from functools import partial
 
 # multiprocessing trix DON'T WORK
 from multiprocessing import Pool
@@ -206,11 +206,10 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
             vxs = 1. / vline_periods
         pl.clf()
         pl.plot(xs, crbs1, "k-", alpha=0.75, label=name1)
-        pl.plot(xs, crbs2, "k-", alpha=0.25, label=name2)
+        pl.plot(xs, crbs2, "g-", alpha=0.50, label=name2)
         for xx in vxs:
             pl.axvline(xx, color="r", ls="--", alpha=0.5)
-        # pl.axvline(x0, color="b", alpha=0.5)
-        pl.legend(loc=2)
+        pl.legend(loc=4, bbox_to_anchor=(1., 1.), ncol=2, fontsize=10)
         if ii == 0:
             if logy:
                 pl.loglog()
@@ -224,10 +223,18 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
         pl.ylabel(ylabel)
         big = max(np.max(crbs1), np.max(crbs2))
         if logy:
-            pl.ylim(1.e-8 * big, 1.e1 * big)
+            ylim = (1.e-6 * big, 1.e1 * big)
         else:
-            pl.ylim(0., 1.)
+            ylim = (-0.05, 1.05)
+            pl.axhline(0., color="k", alpha=0.5, lw=0.5)
+        # transform craziness to plot triangles
+        ax = pl.gca()
+        trans = transforms.blended_transform_factory(
+            ax.transData, ax.transAxes)
+        pl.plot(x0, -0.01, "b^", alpha=0.5, clip_on=False, transform=trans)
+        pl.plot(x0, 1.01, "bv", alpha=0.5, clip_on=False, transform=trans)
         pl.xlim(min(xs), max(xs))
+        pl.ylim(ylim)
         hogg_savefig("%s%1d" % (prefix, ii))
     return None
 
@@ -241,7 +248,7 @@ def plot_aliases(periods, aliases1, aliases2, name1, name2):
     return plot_stuff(periods,
                       np.max(aliases1, axis=1),
                       np.max(aliases2, axis=1),
-                      name1, name2, "Worst cosine distance", "alias", False)
+                      name1, name2, "worst cosine distance", "alias", False)
 
 if __name__ == "__main__":
     picklefn = "./exptime.pkl"

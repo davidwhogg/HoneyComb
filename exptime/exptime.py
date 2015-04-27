@@ -4,9 +4,11 @@ Copyright 2015 David W. Hogg (NYU).
 """
 import os
 import numpy as np
+import cPickle as pickle
 import matplotlib.pyplot as pl
 import matplotlib.transforms as transforms
-import cPickle as pickle
+pl.rc("text", usetex=True)
+pl.rc("font", family="serif")
 
 # multiprocessing trix DON'T WORK
 from multiprocessing import Pool
@@ -17,6 +19,7 @@ else:
     pmap = Pool(processes=nthreads).map
 
 # globals
+fontsize = 12
 np.random.seed(42)
 ntimes = 1500 # number of data points
 dt = 2. # exposure time of sub-exposures (s)
@@ -74,14 +77,14 @@ def make_fake_data(random=True):
     ivars = 1.e10 * (exptimes / 1800.) # 1e10 at exptime = 30 min
     fluxes = np.random.normal(size=ntimes) / np.sqrt(ivars)
     # make signals
-    omega = 0.0189 # rad / s - peak frequency in angular units
+    omega = 2. * np.pi / period # rad / s - peak frequency in angular units
     delta_omega = 0.0003 # rad / s - large frequency difference in angular units
     fluxes += 1.
-    fluxes += make_one_signal(times, exptimes, 0.0001, 0.0002, omega - 2. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.0002, 0.0002, omega - 1. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.0002, 0.0003, omega + 0. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.0002, 0.0002, omega + 1. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.0002, 0.0001, omega + 2. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.000002, 0.000004, omega - 2. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.000003, 0.000004, omega - 1. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.000004, 0.000006, omega + 0. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.000004, 0.000004, omega + 1. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.000004, 0.000002, omega + 2. * delta_omega)
     return times, exptimes, fluxes, ivars
 
 def hogg_savefig(prefix):
@@ -104,13 +107,21 @@ def plot_exptimes(times, exptimes, fluxes, prefix, title=None):
     pl.xlabel("exposure time (s)")
     pl.ylabel("number")
     if title is not None:
-        pl.title(title)
+        pl.title(title, fontsize=fontsize)
     pl.subplot(2, 1, 2)
-    pl.plot(times / 86400., fluxes, "k.")
-    pl.xlim((15, 17))
+    xlim = (15., 17.)
+    # pl.plot(times / 86400., (fluxes - 1.) * 1.e6, "k.")
+    for time, exptime, flux in zip(times, exptimes, fluxes):
+        t1 = (time - 0.5 * exptime) / 86400.
+        t2 = (time + 0.5 * exptime) / 86400.
+        if t2 > xlim[0] and t1 < xlim[1]:
+            dfppm = (flux - 1.) * 1.e6
+            pl.plot([t1, t2], [dfppm, dfppm], "k-", lw=3.0, solid_capstyle="butt")
+            pl.axvline(t2, color="k", alpha=0.5, lw=0.5)
+    pl.xlim(xlim)
     pl.xlabel("time (d)")
-    pl.ylim(0.997, 1.003)
-    pl.ylabel("flux")
+    pl.ylim(-100., 100.)
+    pl.ylabel("[(flux - mean) / mean] (ppm)")
     hogg_savefig(prefix)
     return None
 
@@ -208,8 +219,9 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
         pl.plot(xs, crbs1, "k-", alpha=0.75, label=name1)
         pl.plot(xs, crbs2, "g-", alpha=0.50, label=name2)
         for xx in vxs:
-            pl.axvline(xx, color="r", ls="--", alpha=0.5)
-        pl.legend(loc=4, bbox_to_anchor=(1., 1.), ncol=2, fontsize=10)
+            pl.axvline(xx, color="k", ls="--", alpha=0.5, lw=0.5)
+        pl.legend(loc=4, bbox_to_anchor=(1., 1.01), ncol=2, fontsize=fontsize,
+                  borderaxespad=0.)
         if ii == 0:
             if logy:
                 pl.loglog()
@@ -223,7 +235,7 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
         pl.ylabel(ylabel)
         big = max(np.max(crbs1), np.max(crbs2))
         if logy:
-            ylim = (1.e-6 * big, 1.e1 * big)
+            ylim = (1.e-5 * big, 3.e0 * big)
         else:
             ylim = (-0.05, 1.05)
             pl.axhline(0., color="k", alpha=0.5, lw=0.5)
@@ -231,8 +243,8 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
         ax = pl.gca()
         trans = transforms.blended_transform_factory(
             ax.transData, ax.transAxes)
-        pl.plot(x0, -0.01, "b^", alpha=0.5, clip_on=False, transform=trans)
-        pl.plot(x0, 1.01, "bv", alpha=0.5, clip_on=False, transform=trans)
+        pl.plot(x0, -0.01, "k^", alpha=0.5, clip_on=False, transform=trans)
+        pl.plot(x0, 1.01, "kv", alpha=0.5, clip_on=False, transform=trans)
         pl.xlim(min(xs), max(xs))
         pl.ylim(ylim)
         hogg_savefig("%s%1d" % (prefix, ii))
@@ -271,7 +283,9 @@ if __name__ == "__main__":
         (periods,
          times1, exptimes1, fluxes1, ivars1, crbs1, aliases1,
          times2, exptimes2, fluxes2, ivars2, crbs2, aliases2) = read_from_pickle(picklefn)
-    plot_exptimes(times1, exptimes1, fluxes1, "hogg", "Hogg proposal")
-    plot_exptimes(times2, exptimes2, fluxes2, "TESS", "TESS default")
-    plot_crbs(periods, crbs1, crbs2, "Hogg proposal", "TESS default")
-    plot_aliases(periods, aliases1, aliases2, "Hogg proposal", "TESS default")
+    hoggstr = r"Hogg \textit{et al.}~proposal"
+    tessstr = r"\textsl{TESS} default"
+    plot_exptimes(times1, exptimes1, fluxes1, "hogg", hoggstr)
+    plot_exptimes(times2, exptimes2, fluxes2, "TESS", tessstr)
+    plot_crbs(periods, crbs1, crbs2, hoggstr, tessstr)
+    plot_aliases(periods, aliases1, aliases2, hoggstr, tessstr)

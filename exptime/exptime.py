@@ -78,11 +78,11 @@ def make_fake_data(random=True):
     omega = 2. * np.pi / period # rad / s - peak frequency in angular units
     delta_omega = 0.0003 # rad / s - large frequency difference in angular units
     fluxes += 1.
-    fluxes += make_one_signal(times, exptimes, 0.000002, 0.000004, omega - 2. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.000003, 0.000004, omega - 1. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.000004, 0.000006, omega + 0. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.000004, 0.000004, omega + 1. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.000004, 0.000002, omega + 2. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.00002, 0.00004, omega - 2. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.00003, 0.00004, omega - 1. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.00004, 0.00006, omega + 0. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.00004, 0.00004, omega + 1. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.00004, 0.00002, omega + 2. * delta_omega)
     return times, exptimes, fluxes, ivars
 
 def hogg_savefig(prefix):

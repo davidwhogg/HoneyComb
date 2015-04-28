@@ -78,11 +78,11 @@ def make_fake_data(random=True):
     omega = 2. * np.pi / period # rad / s - peak frequency in angular units
     delta_omega = 0.0003 # rad / s - large frequency difference in angular units
     fluxes += 1.
-    fluxes += make_one_signal(times, exptimes, 0.00002, 0.00004, omega - 2. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.00003, 0.00004, omega - 1. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.00003, 0.00005, omega - 2. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.00003, 0.00006, omega - 1. * delta_omega)
     fluxes += make_one_signal(times, exptimes, 0.00004, 0.00006, omega + 0. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.00004, 0.00004, omega + 1. * delta_omega)
-    fluxes += make_one_signal(times, exptimes, 0.00004, 0.00002, omega + 2. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.00004, 0.00005, omega + 1. * delta_omega)
+    fluxes += make_one_signal(times, exptimes, 0.00003, 0.00005, omega + 2. * delta_omega)
     return times, exptimes, fluxes, ivars
 
 def hogg_savefig(prefix):
@@ -249,8 +249,10 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, big, logy):
             xs = 1. / periods
             vxs = 1. / vline_periods
         pl.clf()
-        pl.plot(xs, crbs1, "k-", alpha=0.75, label=name1)
-        pl.plot(xs, crbs2, "g-", alpha=0.50, label=name2)
+        if crbs1 is not None:
+            pl.plot(xs, crbs1, "k-", alpha=0.75, label=name1)
+        if crbs2 is not None:
+            pl.plot(xs, crbs2, "g-", alpha=0.50, label=name2)
         for xx in vxs:
             pl.axvline(xx, color="k", ls="--", alpha=0.5, lw=0.5)
         pl.legend(loc=4, bbox_to_anchor=(1., 1.01), ncol=2, fontsize=fontsize,
@@ -290,16 +292,16 @@ def plot_crbs(periods, crbs1, crbs2, name1, name2):
                       name1, name2, "Cramer-Rao bounds", "crb", big, True)
 
 def plot_aliases(periods, aliases1, aliases2, name1, name2):
-    big = 1.0
+    big = 1.
     return plot_stuff(periods,
                       np.max(aliases1, axis=1),
                       np.max(aliases2, axis=1),
                       name1, name2, "worst cosine distance", "alias", big, False)
 
-def plot_amps(periods, amps1, amps2, name1, name2):
-    big = np.max(amps1[periods > 3.e2])
+def plot_amps(periods, amps1, amps2, name1, name2, prefix):
+    big = 6000.
     return plot_stuff(periods, amps1, amps2,
-                      name1, name2, "best-fit squared amplitude", "amp", big, False)
+                      name1, name2, "best-fit squared amplitude (ppm$^2$)", prefix, big, False)
 
 if __name__ == "__main__":
     picklefn = "./exptime.pkl"
@@ -328,8 +330,9 @@ if __name__ == "__main__":
     print min(amps1), min(amps2)
     hoggstr = r"Hogg \textit{et al.}~proposal"
     tessstr = r"\textsl{TESS} default"
-    plot_amps(periods, amps1, amps2, hoggstr, tessstr)
+    plot_amps(periods, amps1, None, hoggstr, tessstr, "hoggamp")
+    plot_amps(periods, None, amps2, hoggstr, tessstr, "tessamp")
     plot_crbs(periods, crbs1, crbs2, hoggstr, tessstr)
     plot_aliases(periods, aliases1, aliases2, hoggstr, tessstr)
     plot_exptimes(times1, exptimes1, fluxes1, "hogg", hoggstr)
-    plot_exptimes(times2, exptimes2, fluxes2, "TESS", tessstr)
+    plot_exptimes(times2, exptimes2, fluxes2, "tess", tessstr)

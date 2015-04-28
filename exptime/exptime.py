@@ -153,6 +153,7 @@ def compute_crbs(periods, times, exptimes, ivars):
 
     Just a `map()`.
     """
+    print "compute_crbs(): starting"
     foo = Compute_one_crb(times, exptimes, ivars)
     return np.array(pmap(foo, periods))
 
@@ -196,7 +197,40 @@ def compute_aliases(period0, periods, times, exptimes, ivars):
 
     Just a `map()`.
     """
+    print "compute_aliases(): starting"
     foo = Compute_one_alias(period0, times, exptimes, ivars)
+    return np.array(pmap(foo, periods))
+
+class Infer_one_amplitude:
+    """
+    `Infer_one_amplitude`
+
+    Measure, for one period in the `periods` list, the best-fit
+    squared amplitude at the given period.
+
+    It's a class to permit pickling.
+
+    Idiotically slow.
+    """
+    def __init__(self, times, exptimes, fluxes, ivars):
+        self.times = times
+        self.exptimes = exptimes
+        self.fluxes = fluxes
+        self.ivars = ivars
+
+    def __call__(self, P):
+        omega = 2. * np.pi / P
+        modelA = make_one_signal(self.times, self.exptimes, 1., 0., omega)
+        modelB = make_one_signal(self.times, self.exptimes, 0., 1., omega)
+        A = np.vstack((modelA, modelB))
+        ATA = np.dot(A, self.ivars[:, None] * A.T)
+        ATy = np.dot(A, self.ivars * self.fluxes)
+        xx = np.linalg.solve(ATA, ATy)
+        return np.dot(xx, xx)
+
+def infer_amplitudes(periods, times, exptimes, fluxes, ivars):
+    print "infer_amplitudes(): starting"
+    foo = Infer_one_amplitude(times, exptimes, fluxes, ivars)
     return np.array(pmap(foo, periods))
 
 def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
@@ -233,8 +267,8 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
                 pl.semilogy()
             pl.xlabel("frequency (Hz)")
         pl.ylabel(ylabel)
-        big = max(np.max(crbs1), np.max(crbs2))
         if logy:
+            big = np.max(crbs1)
             ylim = (1.e-5 * big, 3.e0 * big)
         else:
             ylim = (-0.05, 1.05)
@@ -262,6 +296,10 @@ def plot_aliases(periods, aliases1, aliases2, name1, name2):
                       np.max(aliases2, axis=1),
                       name1, name2, "worst cosine distance", "alias", False)
 
+def plot_amps(periods, amps1, amps2, name1, name2):
+    return plot_stuff(periods, amps1, amps2,
+                      name1, name2, "best-fit squared amplitude", "amp", True)
+
 if __name__ == "__main__":
     picklefn = "./exptime.pkl"
     if not os.path.exists(picklefn):
@@ -271,21 +309,25 @@ if __name__ == "__main__":
         periods = 1. / np.arange(1./1.e5 + 0.5 * df, 1./1.e2, df) # (s)
         print "periods", len(periods)
         times1, exptimes1, fluxes1, ivars1 = make_fake_data()
-        aliases1 = compute_aliases(period, periods, times1, exptimes1, ivars1)
+        amps1 = infer_amplitudes(periods, times1, exptimes1, fluxes1, ivars1)
         crbs1 = compute_crbs(periods, times1, exptimes1, ivars1)
+        aliases1 = compute_aliases(period, periods, times1, exptimes1, ivars1)
         times2, exptimes2, fluxes2, ivars2 = make_fake_data(random=False)
+        amps2 = infer_amplitudes(periods, times2, exptimes2, fluxes2, ivars2)
         crbs2 = compute_crbs(periods, times2, exptimes2, ivars2)
         aliases2 = compute_aliases(period, periods, times2, exptimes2, ivars2)
         write_to_pickle(picklefn, (periods,
-                                   times1, exptimes1, fluxes1, ivars1, crbs1, aliases1,
-                                   times2, exptimes2, fluxes2, ivars2, crbs2, aliases2))
+                                   times1, exptimes1, fluxes1, ivars1, amps1, crbs1, aliases1,
+                                   times2, exptimes2, fluxes2, ivars2, amps1, crbs2, aliases2))
     else:
         (periods,
-         times1, exptimes1, fluxes1, ivars1, crbs1, aliases1,
-         times2, exptimes2, fluxes2, ivars2, crbs2, aliases2) = read_from_pickle(picklefn)
+         times1, exptimes1, fluxes1, ivars1, amps1, crbs1, aliases1,
+         times2, exptimes2, fluxes2, ivars2, amps2, crbs2, aliases2) = read_from_pickle(picklefn)
+    
     hoggstr = r"Hogg \textit{et al.}~proposal"
     tessstr = r"\textsl{TESS} default"
     plot_exptimes(times1, exptimes1, fluxes1, "hogg", hoggstr)
     plot_exptimes(times2, exptimes2, fluxes2, "TESS", tessstr)
     plot_crbs(periods, crbs1, crbs2, hoggstr, tessstr)
     plot_aliases(periods, aliases1, aliases2, hoggstr, tessstr)
+    plot_amps(periods, amps1, amps2, hoggstr, tessstr)

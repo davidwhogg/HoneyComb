@@ -71,8 +71,6 @@ def make_fake_data(random=True):
     times = 0.5 * (t2s + t1s)
     exptimes = (t2s - t1s)
     print "make_fake_data(): made", len(times), "exposures"
-    print times[-5:]
-    print exptimes[-5:]
     # make ivars with proper exptime variation; make noise
     ivars = 1.e10 * (exptimes / 1800.) # 1e10 at exptime = 30 min
     fluxes = np.random.normal(size=ntimes) / np.sqrt(ivars)
@@ -215,17 +213,18 @@ class Infer_one_amplitude:
     def __init__(self, times, exptimes, fluxes, ivars):
         self.times = times
         self.exptimes = exptimes
-        self.fluxes = fluxes
+        self.fluxes = (fluxes - 1.) * 1.e6 # (ppm)
         self.ivars = ivars
 
     def __call__(self, P):
         omega = 2. * np.pi / P
         modelA = make_one_signal(self.times, self.exptimes, 1., 0., omega)
         modelB = make_one_signal(self.times, self.exptimes, 0., 1., omega)
-        A = np.vstack((modelA, modelB))
+        ones = np.ones_like(modelA)
+        A = np.vstack((ones, modelA, modelB))
         ATA = np.dot(A, self.ivars[:, None] * A.T)
         ATy = np.dot(A, self.ivars * self.fluxes)
-        xx = np.linalg.solve(ATA, ATy)
+        xx = np.linalg.solve(ATA, ATy)[1:]
         return np.dot(xx, xx)
 
 def infer_amplitudes(periods, times, exptimes, fluxes, ivars):
@@ -233,7 +232,7 @@ def infer_amplitudes(periods, times, exptimes, fluxes, ivars):
     foo = Infer_one_amplitude(times, exptimes, fluxes, ivars)
     return np.array(pmap(foo, periods))
 
-def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
+def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, big, logy):
     """
     `plot_stuff`
     """
@@ -268,10 +267,9 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
             pl.xlabel("frequency (Hz)")
         pl.ylabel(ylabel)
         if logy:
-            big = np.max(crbs1)
             ylim = (1.e-5 * big, 3.e0 * big)
         else:
-            ylim = (-0.05, 1.05)
+            ylim = (-0.05 * big, 1.05 * big)
             pl.axhline(0., color="k", alpha=0.5, lw=0.5)
         # transform craziness to plot triangles
         ax = pl.gca()
@@ -285,20 +283,23 @@ def plot_stuff(periods, crbs1, crbs2, name1, name2, ylabel, prefix, logy):
     return None
 
 def plot_crbs(periods, crbs1, crbs2, name1, name2):
+    big = np.max(np.sum(crbs1, axis=1))
     return plot_stuff(periods,
                       np.sum(crbs1, axis=1),
                       np.sum(crbs2, axis=1),
-                      name1, name2, "Cramer-Rao bounds", "crb", True)
+                      name1, name2, "Cramer-Rao bounds", "crb", big, True)
 
 def plot_aliases(periods, aliases1, aliases2, name1, name2):
+    big = 1.0
     return plot_stuff(periods,
                       np.max(aliases1, axis=1),
                       np.max(aliases2, axis=1),
-                      name1, name2, "worst cosine distance", "alias", False)
+                      name1, name2, "worst cosine distance", "alias", big, False)
 
 def plot_amps(periods, amps1, amps2, name1, name2):
+    big = np.max(amps1[periods > 3.e2])
     return plot_stuff(periods, amps1, amps2,
-                      name1, name2, "best-fit squared amplitude", "amp", True)
+                      name1, name2, "best-fit squared amplitude", "amp", big, False)
 
 if __name__ == "__main__":
     picklefn = "./exptime.pkl"
@@ -318,16 +319,17 @@ if __name__ == "__main__":
         aliases2 = compute_aliases(period, periods, times2, exptimes2, ivars2)
         write_to_pickle(picklefn, (periods,
                                    times1, exptimes1, fluxes1, ivars1, amps1, crbs1, aliases1,
-                                   times2, exptimes2, fluxes2, ivars2, amps1, crbs2, aliases2))
+                                   times2, exptimes2, fluxes2, ivars2, amps2, crbs2, aliases2))
     else:
         (periods,
          times1, exptimes1, fluxes1, ivars1, amps1, crbs1, aliases1,
          times2, exptimes2, fluxes2, ivars2, amps2, crbs2, aliases2) = read_from_pickle(picklefn)
-    
+
+    print min(amps1), min(amps2)
     hoggstr = r"Hogg \textit{et al.}~proposal"
     tessstr = r"\textsl{TESS} default"
-    plot_exptimes(times1, exptimes1, fluxes1, "hogg", hoggstr)
-    plot_exptimes(times2, exptimes2, fluxes2, "TESS", tessstr)
+    plot_amps(periods, amps1, amps2, hoggstr, tessstr)
     plot_crbs(periods, crbs1, crbs2, hoggstr, tessstr)
     plot_aliases(periods, aliases1, aliases2, hoggstr, tessstr)
-    plot_amps(periods, amps1, amps2, hoggstr, tessstr)
+    plot_exptimes(times1, exptimes1, fluxes1, "hogg", hoggstr)
+    plot_exptimes(times2, exptimes2, fluxes2, "TESS", tessstr)

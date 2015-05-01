@@ -1,5 +1,12 @@
+.DS_Store
+*.swp
 *~
 *.aux
 *.log
 *.pdf
 *.png
+*.pyc
+*.h5
+*.txt
+*.vels
+*.ipynb
